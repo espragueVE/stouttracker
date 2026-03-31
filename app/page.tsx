@@ -37,14 +37,16 @@ const INITIAL_FORMS: CampaignForm[] = [
 
 const App: React.FC = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(() => {
-    return localStorage.getItem('sheriff_auth') === 'true';
+    // return localStorage.getItem('sheriff_auth') === 'true';
   });
   const [view, setView] = useState<ViewState>('dashboard');
   const [donors, setDonors] = useState<Donor[]>(() => {
+    if (typeof window === 'undefined') return INITIAL_DONORS;
     const saved = localStorage.getItem('sheriff_donors');
     return saved ? JSON.parse(saved) : INITIAL_DONORS;
   });
   const [forms, setForms] = useState<CampaignForm[]>(() => {
+    if (typeof window === 'undefined') return INITIAL_FORMS;
     const saved = localStorage.getItem('sheriff_forms');
     const initial = saved ? JSON.parse(saved) : INITIAL_FORMS;
     if (!saved || initial.length < 5) return INITIAL_FORMS;
@@ -54,6 +56,7 @@ const App: React.FC = () => {
   const [editingDonor, setEditingDonor] = useState<Donor | undefined>(undefined);
   const [isLogFormOpen, setIsLogFormOpen] = useState(false);
   const [logEntries, setLogEntries] = useState<LogEntry[]>(() => {
+    if (typeof window === 'undefined') return [];
     const saved = localStorage.getItem('sheriff_logs');
     return saved ? JSON.parse(saved) : [];
   });
@@ -61,17 +64,17 @@ const App: React.FC = () => {
   useEffect(() => {
     localStorage.setItem('sheriff_donors', JSON.stringify(donors));
     localStorage.setItem('sheriff_forms', JSON.stringify(forms));
-    localStorage.setItem('sheriff_auth', isLoggedIn.toString());
+    // localStorage.setItem('sheriff_auth', isLoggedIn.toString());
   }, [donors, forms, isLoggedIn]);
 
-  const handleLogin = () => {
-    setIsLoggedIn(true);
-  };
+  // const handleLogin = () => {
+  //   setIsLoggedIn(true);
+  // };
 
-  const handleLogout = () => {
-    setIsLoggedIn(false);
-    setView('dashboard');
-  };
+  // const handleLogout = () => {
+  //   setIsLoggedIn(false);
+  //   setView('dashboard');
+  // };
 
   const handleSaveDonor = (donorData: Donor) => {
     if (editingDonor) {
@@ -129,9 +132,9 @@ const App: React.FC = () => {
     }
   };
 
-  if (!isLoggedIn) {
-    return <LoginPage onLogin={handleLogin} />;
-  }
+  // if (!isLoggedIn) {
+  //   return <LoginPage onLogin={handleLogin} />;
+  // }
 
   return (
     <div className="min-h-screen bg-slate-50 flex font-sans text-slate-900">
@@ -182,7 +185,7 @@ const App: React.FC = () => {
               </div>
             </div>
             <button 
-              onClick={handleLogout}
+                // onClick={handleLogout}
               className="p-1.5 hover:bg-red-500/20 hover:text-red-400 rounded-lg transition-colors text-slate-400"
               title="Logout"
             >
@@ -212,7 +215,7 @@ const App: React.FC = () => {
              </div>
              <div className="h-8 w-px bg-slate-200 hidden sm:block"></div>
              <button 
-               onClick={handleLogout}
+                // onClick={handleLogout}
                className="flex items-center gap-2 px-3 py-1.5 text-sm font-bold text-slate-600 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
              >
                <LogOut className="h-4 w-4" />

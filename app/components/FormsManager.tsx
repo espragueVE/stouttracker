@@ -1,15 +1,9 @@
 'use client';
 
 import React, { useState } from 'react';
-import { CampaignForm, Donor } from '../types';
+import { CampaignForm, Donor, FormField } from '../types';
 import { ClipboardList, FileSignature, ChevronRight, X } from 'lucide-react';
-
-interface FormField {
-  id: string;
-  label: string;
-  type: 'text' | 'textarea' | 'email' | 'tel' | 'number' | 'date';
-  required: boolean;
-}
+import { time } from 'console';
 
 interface FormsManagerProps {
   forms: CampaignForm[];
@@ -18,11 +12,56 @@ interface FormsManagerProps {
   formFields?: { [formId: string]: FormField[] };
 }
 
+export const MonetaryDonationForm: FormField[] = [
+  { id: 'AmountDonated', label: 'Amount Donated', type: 'number', required: true },
+  { id: 'ReceivedFor', label: 'Received For', type: 'text', required: true },
+  { id: 'DateReceived', label: 'Date Received', type: 'date', required: true }
+];
+
+export const InKindDonationForm: FormField[] = [
+  { id: 'ReceivedFor', label: 'Received For', type: 'text', required: true },
+  { id: 'Value', label: 'Estimated Value', type: 'number', required: true },
+  { id: 'DateReceived', label: 'Date Received', type: 'date', required: true }
+];
+
+export const ExpendituresForm: FormField[] = [
+  { id: 'Amount', label: 'Amount Spent', type: 'number', required: true },
+  { id: 'Purpose', label: 'Purpose of Expenditure', type: 'text', required: true },
+  { id: 'Date', label: 'Date of Expenditure', type: 'date', required: true }
+];
+
+export const LoansForm: FormField[] = [
+  { id: 'OutstandingBalanceStart', label: 'Outstanding Balance Start', type: 'number', required: true },
+  { id: 'LoansReceived', label: 'Loans Received', type: 'number', required: true },
+  { id: 'LoanPayments', label: 'Loan Payments Made', type: 'number', required: true },
+  { id: 'OutstandingBalanceEnd', label: 'Outstanding Balance End', type: 'number', required: true },
+  { id: 'ReceivedFor', label: 'Received For', type: 'text', required: true },
+  { id: 'Date', label: 'Date of Report', type: 'date', required: true }
+];
+
+export const ObligationsForm: FormField[] = [
+  { id: 'Description', label: 'Description of Obligation', type: 'text', required: true },
+  { id: 'OutstandingBalanceStart', label: 'Outstanding Balance Start', type: 'number', required: true },
+  { id: 'DebtIncurred', label: 'Debt Incurred', type: 'number', required: true },
+  { id: 'DebtPayments', label: 'Debt Payments Made', type: 'number', required: true },
+  { id: 'OutstandingBalanceEnd', label: 'Outstanding Balance End', type: 'number', required: true }
+];
+
 const DEFAULT_FIELDS: FormField[] = [
   { id: 'q1', label: 'Question 1', type: 'textarea', required: true },
   { id: 'q2', label: 'Question 2', type: 'textarea', required: true },
-  { id: 'q3', label: 'Question 3', type: 'textarea', required: true },
+  { id: 'q3', label: 'Question 3', type: 'textarea', required: true }
 ];
+
+// Preset mapping for forms that may have lost their `FormQuestions` when
+// persisted or loaded from localStorage.
+const PRESET_FORMS: { [formId: string]: FormField[] } = {
+  'f1': MonetaryDonationForm,
+  'f2': InKindDonationForm,
+  'f3': ExpendituresForm,
+  'f4': LoansForm,
+  'f5': ObligationsForm,
+};
 
 export const FormsManager: React.FC<FormsManagerProps> = ({ forms, donors, onSaveLogEntry, formFields = {} }) => {
   const [isLogFormOpen, setIsLogFormOpen] = useState(false);
@@ -51,8 +90,7 @@ export const FormsManager: React.FC<FormsManagerProps> = ({ forms, donors, onSav
       id: Date.now().toString(),
       formId: selectedFormId,
       user,
-      answers: formAnswers,
-      timestamp: new Date().toISOString(),
+      formAnswers: formAnswers,  // Changed from 'answers' to 'formAnswers'
     };
 
     onSaveLogEntry(entry);
@@ -64,7 +102,12 @@ export const FormsManager: React.FC<FormsManagerProps> = ({ forms, donors, onSav
   };
 
   const selectedForm = forms.find(f => f.id === selectedFormId);
-  const currentFields = selectedFormId && formFields[selectedFormId] ? formFields[selectedFormId] : DEFAULT_FIELDS;
+
+  let currentFields: FormField[] = DEFAULT_FIELDS;
+
+  if (selectedForm) {
+    currentFields = selectedForm.FormQuestions || formFields[selectedForm.id] || PRESET_FORMS[selectedForm.id] || DEFAULT_FIELDS;
+  }
 
   const renderFormField = (field: FormField) => {
     const value = formAnswers[field.id] || '';

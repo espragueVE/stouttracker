@@ -1,7 +1,16 @@
+export interface FormField {
+  id: string;
+  label: string;
+  type: 'text' | 'textarea' | 'email' | 'tel' | 'number' | 'date';
+  required: boolean;
+}
 export interface LogEntry {
   id: string;
-  date: string;
-  time: string;
+  user?: Donor;
+  formId: string;
+  formAnswers: { [key: string]: string };
+  date?: string;
+  time?: string;
   description: string;
   category: 'donation' | 'volunteer' | 'event' | 'note' | 'issue';
   createdBy: string;
@@ -31,7 +40,7 @@ export interface CampaignForm {
   title: string;
   description: string;
   category: 'legal' | 'finance' | 'outreach';
-  lastUpdated: string;
+  FormQuestions: FormField[];
 }
 
 export interface CampaignStats {
@@ -63,3 +72,17 @@ export interface SignRequest {
   status: 'pending' | 'delivered';
   requestDate: string; // ISO string
 }
+
+export interface LogPayload {
+  id: string;
+  formId: string;
+  formTitle: string;
+  // timestamp: string;
+  user?: {
+    firstName: string;
+    lastName: string;
+    email: string;
+  };
+  answers: { [key: string]: string };
+  };
+

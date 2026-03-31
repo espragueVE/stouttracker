@@ -1,14 +1,20 @@
 'use client';
 import React, { useState, useEffect } from 'react';
-import { Donor, ViewState, CampaignForm, LogEntry } from '../types/index';
-import { DashboardStats } from '../components/DashboardStats';
-import { DonationForm } from '../components/DonationForm';
-import { SupportersList } from '../components/SupportersList';
-import { FormsManager } from '../components/FormsManager';
-import { LoginPage } from '../components/LoginPage';
+import { Donor, ViewState, CampaignForm, LogEntry } from './types/index';
+import { DashboardStats } from './components/DashboardStats';
+import { DonationForm } from './components/DonationForm';
+import { SupportersList } from './components/SupportersList';
+import { FormsManager } from './components/FormsManager';
+import { LoginPage } from './components/LoginPage';
 import { 
   LayoutDashboard, Users, Shield, ClipboardList, LogOut
 } from 'lucide-react';
+import {MonetaryDonationForm} from './components/FormsManager';
+import { InKindDonationForm } from './components/FormsManager';
+import { ExpendituresForm } from './components/FormsManager';
+import { LoansForm } from './components/FormsManager';
+import { ObligationsForm } from './components/FormsManager';
+import { LogPayload } from './types/index';
 
 // Mock initial data
 const INITIAL_DONORS: Donor[] = [
@@ -22,11 +28,11 @@ const INITIAL_DONORS: Donor[] = [
 ];
 
 const INITIAL_FORMS: CampaignForm[] = [
-  { id: 'f1', title: 'Itemized Statement of Contributions', description: 'Detailed record of all monetary donations received for election reporting.', category: 'finance', lastUpdated: '2023-08-01' },
-  { id: 'f2', title: 'Itemized Statement of In-Kind Contributions', description: 'Report of non-monetary goods or services provided to the campaign.', category: 'finance', lastUpdated: '2023-10-10' },
-  { id: 'f3', title: 'Itemized Statement of Expenditures', description: 'Log of campaign spending including vendor payments and reimbursements.', category: 'finance', lastUpdated: '2023-10-05' },
-  { id: 'f4', title: 'Itemized Statement of Loans', description: 'Record of funds borrowed by the campaign from individuals or lending institutions.', category: 'finance', lastUpdated: '2023-11-01' },
-  { id: 'f5', title: 'Itemized Statement of Obligations', description: 'Listing of outstanding debts and obligations owed by the campaign.', category: 'finance', lastUpdated: '2023-11-02' },
+  { id: 'MonetaryContributions', title: 'Itemized Statement of Contributions', description: 'Detailed record of all monetary donations received for election reporting.', category: 'finance', FormQuestions: MonetaryDonationForm },
+  { id: 'InKindContributions', title: 'Itemized Statement of In-Kind Contributions', description: 'Report of non-monetary goods or services provided to the campaign.', category: 'finance', FormQuestions: InKindDonationForm },
+  { id: 'Expenditures', title: 'Itemized Statement of Expenditures', description: 'Log of campaign spending including vendor payments and reimbursements.', category: 'finance', FormQuestions: ExpendituresForm },
+  { id: 'Loans', title: 'Itemized Statement of Loans', description: 'Record of funds borrowed by the campaign from individuals or lending institutions.', category: 'finance', FormQuestions: LoansForm },
+  { id: 'Obligations', title: 'Itemized Statement of Obligations', description: 'Listing of outstanding debts and obligations owed by the campaign.', category: 'finance', FormQuestions: ObligationsForm },
 ];
 
 const App: React.FC = () => {
@@ -86,9 +92,41 @@ const App: React.FC = () => {
     setIsFormOpen(true);
   };
 
-  const handleSaveLogEntry = (entry: LogEntry) => {
-    setLogEntries(prev => [entry, ...prev]);
-    setIsLogFormOpen(false);
+  const handleSaveLogEntry = async (entry: LogEntry) => {
+    try {
+      // Create payload for API submission
+      const payload: LogPayload = {
+        id: entry.id,
+        formId: entry.formId,
+        formTitle: forms.find(f => f.id === entry.formId)?.title || 'Unknown Form',
+        user: entry.user ? {
+          firstName: entry.user.firstName,
+          lastName: entry.user.lastName,
+          email: entry.user.email,
+        } : undefined,
+        answers: entry.formAnswers,
+        
+      };
+
+      // Submit to API
+      try {
+        const response = await fetch('/api/SubmitLogEntry', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),  // Send payload directly, not wrapped
+        });
+        if (response.ok) {
+          setLogEntries(prev => [entry, ...prev]);
+          localStorage.setItem('sheriff_logs', JSON.stringify([entry, ...logEntries]));
+        } else {
+          console.error('Failed to save log entry');
+        }
+      } catch (error) {
+        console.error('Error saving log entry:', error);
+      }
+    } catch (error) {
+      console.error('Error in handleSaveLogEntry:', error);
+    }
   };
 
   if (!isLoggedIn) {

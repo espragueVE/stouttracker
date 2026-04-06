@@ -1,9 +1,24 @@
-import { DatabasePool } from "./DataBasepool";
+import sql from "./db";
 
 export default async function fetchUsersInfo() {
-    const pool = await DatabasePool.getInstance();
-    const result = await pool.request().query(`
-        select * from Users        
-        `);
+  type UsersRow = {
+    id: string;
+    created_at: Date;
+    Business_Org: string;
+    F_Name: string;
+    M_Name: string;
+    L_Name: string;
+    Address: string;
+    City: string;
+    State: string;
+    Zip: string;
+    Occupation: string;
+    Employer: string;
+    Age: number;
+  };
 
+  const result = await sql<UsersRow[]>`
+        select * from public.Users        
+        `;
+  return result;
 }

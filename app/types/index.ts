@@ -1,7 +1,7 @@
 export interface FormField {
   id: string;
   label: string;
-  type: 'text' | 'textarea' | 'email' | 'tel' | 'number' | 'date';
+  type: "text" | "textarea" | "email" | "tel" | "number" | "date";
   required: boolean;
 }
 export interface LogEntry {
@@ -12,7 +12,7 @@ export interface LogEntry {
   date?: string;
   time?: string;
   description: string;
-  category: 'donation' | 'volunteer' | 'event' | 'note' | 'issue';
+  category: "donation" | "volunteer" | "event" | "note" | "issue";
   createdBy: string;
 }
 
@@ -20,15 +20,19 @@ export interface Donor {
   id: string;
   firstName: string;
   lastName: string;
+  middleName?: string;
+  businessOrg?: string;
+  email?: string;
   amount: number;
   date: string; // ISO string
-  email: string;
   phone?: string;
   address: string;
   city: string;
+  state?: string;
   zip: string;
   age?: number;
   occupation?: string;
+  employer?: string;
   notes?: string;
   isVolunteer?: boolean;
   requestedSign?: boolean;
@@ -39,7 +43,7 @@ export interface CampaignForm {
   id: string;
   title: string;
   description: string;
-  category: 'legal' | 'finance' | 'outreach';
+  category: "legal" | "finance" | "outreach";
   FormQuestions: FormField[];
 }
 
@@ -50,14 +54,14 @@ export interface CampaignStats {
   recentDonations: Donor[];
 }
 
-export type ViewState = 'dashboard' | 'supporters' | 'log';
+export type ViewState = "dashboard" | "supporters" | "log";
 
 // Volunteer interface for campaign staff management
 export interface Volunteer {
   id: string;
   name: string;
   email: string;
-  status: 'active' | 'onboarding' | 'inactive';
+  status: "active" | "onboarding" | "inactive";
   interests: string[];
   joinedDate: string; // ISO string
 }
@@ -69,20 +73,27 @@ export interface SignRequest {
   address: string;
   city: string;
   zip: string;
-  status: 'pending' | 'delivered';
+  status: "pending" | "delivered";
   requestDate: string; // ISO string
 }
 
 export interface LogPayload {
-  id: string;
   formId: string;
+  formType: string;
   formTitle: string;
   // timestamp: string;
   user?: {
+    id?: string;
+    businessOrg?: string;
+    middleName?: string;
     firstName: string;
     lastName: string;
-    email: string;
+    address?: string;
+    city?: string;
+    state?: string;
+    zip?: string;
+    occupation?: string;
+    employer?: string;
   };
   answers: { [key: string]: string };
-  };
-
+}

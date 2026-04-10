@@ -79,76 +79,8 @@ export const DonationForm: React.FC<DonationFormProps> = ({ donor, onSave, onCan
         </div>
 
         <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-6 space-y-6">
-          
-          {/* Amount & Date */}
-          <div className="grid grid-cols-2 gap-6">
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Contribution ($) *</label>
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <span className="text-slate-500 sm:text-sm">$</span>
-                </div>
-                <input
-                  type="number"
-                  name="amount"
-                  required
-                  min="0"
-                  className="pl-7 block w-full bg-white rounded-md border-slate-300 shadow-sm focus:border-sheriff-500 focus:ring-sheriff-500 sm:text-sm py-2 border"
-                  placeholder="0.00"
-                  onChange={handleChange}
-                  value={formData.amount === 0 ? '' : formData.amount}
-                />
-              </div>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Date Received</label>
-              <input
-                type="date"
-                name="date"
-                className="block w-full rounded-md border-slate-300 shadow-sm focus:border-sheriff-500 focus:ring-sheriff-500 sm:text-sm py-2 border px-3"
-                onChange={handleChange}
-                value={formData.date || ''}
-              />
-            </div>
-          </div>
 
           {/* Campaign Involvement Toggles */}
-          <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-3">
-            <h3 className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-1">Campaign Involvement</h3>
-            <div className="flex flex-col sm:flex-row gap-4">
-              <label className="flex items-center gap-2 cursor-pointer group">
-                <input 
-                  type="checkbox" 
-                  name="isVolunteer" 
-                  checked={!!formData.isVolunteer} 
-                  onChange={handleChange}
-                  className="h-4 w-4 text-sheriff-600 focus:ring-sheriff-500 border-slate-300 rounded"
-                />
-                <span className="text-sm font-medium text-slate-700 group-hover:text-sheriff-700 transition-colors">Volunteer</span>
-              </label>
-              <label className="flex items-center gap-2 cursor-pointer group">
-                <input 
-                  type="checkbox" 
-                  name="requestedSign" 
-                  checked={!!formData.requestedSign} 
-                  onChange={handleChange}
-                  className="h-4 w-4 text-sheriff-600 focus:ring-sheriff-500 border-slate-300 rounded"
-                />
-                <span className="text-sm font-medium text-slate-700 group-hover:text-sheriff-700 transition-colors">Requested Sign</span>
-              </label>
-              <label className="flex items-center gap-2 cursor-pointer group">
-                <input 
-                  type="checkbox" 
-                  name="hasSign" 
-                  checked={!!formData.hasSign} 
-                  onChange={handleChange}
-                  className="h-4 w-4 text-sheriff-600 focus:ring-sheriff-500 border-slate-300 rounded"
-                />
-                <span className="text-sm font-medium text-slate-700 group-hover:text-sheriff-700 transition-colors">Has Sign</span>
-              </label>
-            </div>
-          </div>
-
           {/* Personal Info */}
           <div className="space-y-4">
              <h3 className="text-sm font-semibold text-slate-900 border-b pb-2">Supporter Information</h3>
@@ -203,19 +135,13 @@ export const DonationForm: React.FC<DonationFormProps> = ({ donor, onSave, onCan
              </div>
           </div>
 
-          {/* Notes */}
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">Notes</label>
-            <textarea name="notes" rows={3} className="block w-full rounded-md border-slate-300 shadow-sm focus:border-sheriff-500 focus:ring-sheriff-500 sm:text-sm py-2 border px-3" onChange={handleChange} value={formData.notes || ''}></textarea>
-          </div>
-
         </form>
 
         <div className="p-6 border-t border-slate-200 bg-slate-50 flex justify-end space-x-3">
           <button type="button" onClick={onCancel} className="px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-md shadow-sm hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-sheriff-500">
             Cancel
           </button>
-          <button onClick={handleSubmit} className="px-4 py-2 text-sm font-medium text-white bg-sheriff-600 border border-transparent rounded-md shadow-sm hover:bg-sheriff-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-sheriff-500">
+          <button onClick={handleSubmit} className="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md shadow-sm hover:bg-sheriff-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-sheriff-500">
             {donor ? 'Update Supporter' : 'Save Supporter'}
           </button>
         </div>

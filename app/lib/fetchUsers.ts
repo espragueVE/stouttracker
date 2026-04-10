@@ -18,7 +18,7 @@ export default async function fetchUsersInfo() {
   };
 
   const result = await sql<UsersRow[]>`
-        select * from public.Users        
+        select * from public."User"        
         `;
   return result;
 }

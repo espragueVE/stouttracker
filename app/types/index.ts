@@ -97,3 +97,17 @@ export interface LogPayload {
   };
   answers: { [key: string]: string };
 }
+
+// Shape returned by the dashboard API
+export interface DashboardData {
+  totalAmount: number;
+  distinctDonors: Array<string | number>;
+  avgAmount: number;
+  topByDate: Array<{ Entry_Date?: string; EntryDate?: string; total: number }>;
+  ages: {
+    under30: number;
+    between30and49: number;
+    between50and64: number;
+    over65: number;
+  };
+}

@@ -12,6 +12,7 @@ export default async function fetchDashInfo() {
     const totalRows = await sql<TotalRow[]>`
       SELECT SUM("Amount") AS totalAmount FROM public."LogEntryDetails"
        WHERE "Entry_Type" = 'f1'
+       GROUP BY "Entry_Type"
     `;
 
     const donorRows = await sql<DonorRow[]>`

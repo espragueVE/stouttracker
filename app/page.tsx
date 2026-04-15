@@ -1,6 +1,12 @@
 "use client";
 import React, { useState, useEffect } from "react";
-import { Donor, ViewState, CampaignForm, LogEntry } from "./types/index";
+import {
+  Donor,
+  ViewState,
+  CampaignForm,
+  LogEntry,
+  DashboardData,
+} from "./types/index";
 import { DashboardStats } from "./components/DashboardStats";
 import { DonationForm } from "./components/DonationForm";
 import { SupportersList } from "./components/SupportersList";
@@ -21,127 +27,7 @@ import { ObligationsForm } from "./components/FormsManager";
 import { LogPayload } from "./types/index";
 
 // Mock initial data
-const INITIAL_DONORS: Donor[] = [
-  {
-    id: "1",
-    firstName: "Robert",
-    lastName: "Vance",
-    amount: 1500,
-    date: "2023-10-01",
-    email: "bob@vance.com",
-    address: "123 Main St",
-    city: "Scranton",
-    zip: "18503",
-    age: 54,
-    occupation: "Business Owner",
-    notes: "Concerned about downtown patrols",
-    isVolunteer: true,
-    requestedSign: false,
-    hasSign: true,
-  },
-  {
-    id: "2",
-    firstName: "Phyllis",
-    lastName: "Lapin",
-    amount: 250,
-    date: "2023-10-02",
-    email: "phyllis@dunder.com",
-    address: "45 Maple Ave",
-    city: "Scranton",
-    zip: "18503",
-    age: 51,
-    occupation: "Sales",
-    notes: "",
-    isVolunteer: false,
-    requestedSign: true,
-    hasSign: false,
-  },
-  {
-    id: "3",
-    firstName: "Stanley",
-    lastName: "Hudson",
-    amount: 50,
-    date: "2023-10-05",
-    email: "stanley@dunder.com",
-    address: "89 Oak Ln",
-    city: "Dunmore",
-    zip: "18512",
-    age: 62,
-    occupation: "Sales",
-    notes: "Sent via check",
-    isVolunteer: false,
-    requestedSign: false,
-    hasSign: false,
-  },
-  {
-    id: "4",
-    firstName: "Michael",
-    lastName: "Scott",
-    amount: 500,
-    date: "2023-10-06",
-    email: "mscott@dunder.com",
-    address: "12 Condominium Way",
-    city: "Scranton",
-    zip: "18503",
-    age: 45,
-    occupation: "Regional Manager",
-    notes: "Wants a badge",
-    isVolunteer: true,
-    requestedSign: true,
-    hasSign: true,
-  },
-  {
-    id: "5",
-    firstName: "Dwight",
-    lastName: "Schrute",
-    amount: 5000,
-    date: "2023-10-07",
-    email: "dwight@farms.com",
-    address: "Schrute Farms",
-    city: "Honesdale",
-    zip: "18431",
-    age: 40,
-    occupation: "Farmer/Sheriff Deputy",
-    notes: "Maximum donation allowed",
-    isVolunteer: true,
-    requestedSign: true,
-    hasSign: true,
-  },
-  {
-    id: "6",
-    firstName: "Jim",
-    lastName: "Halpert",
-    amount: 100,
-    date: "2023-10-08",
-    email: "jim@athleap.com",
-    address: "55 Willow Dr",
-    city: "Philadelphia",
-    zip: "19103",
-    age: 35,
-    occupation: "Marketing",
-    notes: "",
-    isVolunteer: false,
-    requestedSign: true,
-    hasSign: true,
-  },
-  {
-    id: "7",
-    firstName: "Pam",
-    lastName: "Beesly",
-    amount: 100,
-    date: "2023-10-08",
-    email: "pam@art.com",
-    address: "55 Willow Dr",
-    city: "Philadelphia",
-    zip: "19103",
-    age: 34,
-    occupation: "Office Admin",
-    notes: "",
-    isVolunteer: false,
-    requestedSign: false,
-    hasSign: false,
-  },
-];
+
 
 const INITIAL_FORMS: CampaignForm[] = [
   {
@@ -192,9 +78,8 @@ const App: React.FC = () => {
   });
   const [view, setView] = useState<ViewState>("dashboard");
   const [donors, setDonors] = useState<Donor[]>(() => {
-    if (typeof window === "undefined") return INITIAL_DONORS;
     const saved = localStorage.getItem("sheriff_donors");
-    return saved ? JSON.parse(saved) : INITIAL_DONORS;
+    return saved ? JSON.parse(saved) : [];
   });
   const [forms, setForms] = useState<CampaignForm[]>(() => {
     if (typeof window === "undefined") return INITIAL_FORMS;
@@ -214,11 +99,34 @@ const App: React.FC = () => {
     return saved ? JSON.parse(saved) : [];
   });
 
+  const [dashboardData, setDashboardData] = useState<DashboardData | null>(
+    null,
+  );
+
   useEffect(() => {
     localStorage.setItem("sheriff_donors", JSON.stringify(donors));
     localStorage.setItem("sheriff_forms", JSON.stringify(forms));
     // localStorage.setItem('sheriff_auth', isLoggedIn.toString());
   }, [donors, forms, isLoggedIn]);
+
+  // Fetch dashboard aggregates from server API
+  useEffect(() => {
+    let mounted = true;
+    const load = async () => {
+      try {
+        const res = await fetch("/api/DashInfo");
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data: DashboardData = await res.json();
+        if (mounted) setDashboardData(data);
+      } catch (err) {
+        console.error("Failed to load dashboard data:", err);
+      }
+    };
+    load();
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   // const handleLogin = () => {
   //   setIsLoggedIn(true);
@@ -402,7 +310,9 @@ const App: React.FC = () => {
 
         {/* View Container */}
         <div className="p-4 sm:p-8 space-y-8 overflow-y-auto flex-1">
-          {view === "dashboard" && <DashboardStats donors={donors} />}
+          {view === "dashboard" && (
+            <DashboardStats donors={donors} dashboardData={dashboardData} />
+          )}
           {view === "supporters" && (
             <SupportersList
               supporters={donors}

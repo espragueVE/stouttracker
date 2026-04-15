@@ -10,27 +10,26 @@ export async function POST(request: Request) {
   try {
     const payload: LogPayload = await request.json();
 
-    if (payload.formType === "MonetaryContributions") {
-      const response = await postMonetaryDonation(payload);
-      return NextResponse.json(response, { status: 200 });
-    } else if (payload.formType === "InKindContributions") {
-      const response = await postInKindDonation(payload);
-      return NextResponse.json(response, { status: 200 });
-    } else if (payload.formType === "Expenditures") {
-      const response = await postExpenditures(payload);
-      return NextResponse.json(response, { status: 200 });
-    } else if (payload.formType === "Loans") {
-      const response = await postLoans(payload);
-      return NextResponse.json(response, { status: 200 });
-    } else if (payload.formType === "Obligations") {
-      const response = await postObligations(payload);
-      return NextResponse.json(response, { status: 200 });
-    }
+    //write this with a variable mapping for the formType -> post function
+    const typeMapping: {
+      [key: string]: (payload: LogPayload) => Promise<any>;
+    } = {
+      "MonetaryContributions": postMonetaryDonation,
+      "InKindContributions": postInKindDonation,
+      "Expenditures": postExpenditures,
+      "Loans": postLoans,
+      "Obligations": postObligations,
+    };
 
-    return NextResponse.json(
-      { error: `Unknown form type: ${payload.formType}` },
-      { status: 400 },
-    );
+    if (typeMapping[payload.formType]) {
+      const response = await typeMapping[payload.formType](payload);
+      return NextResponse.json(response, { status: 200 });
+    } else {
+      return NextResponse.json(
+        { error: `Unknown form type: ${payload.formType}` },
+        { status: 400 },
+      );
+    }
   } catch (error) {
     console.error("PostEntry error:", error);
     return NextResponse.json(

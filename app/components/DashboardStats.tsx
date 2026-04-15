@@ -1,5 +1,5 @@
 import React, { useMemo } from "react";
-import { Donor } from "../types";
+import { Donor, DashboardData } from "../types";
 import {
   BarChart,
   Bar,
@@ -17,12 +17,43 @@ import { Users, DollarSign, TrendingUp, Activity } from "lucide-react";
 
 interface DashboardStatsProps {
   donors: Donor[];
+  dashboardData?: DashboardData | null;
 }
 
 const COLORS = ["#0ea5e9", "#f59e0b", "#10b981", "#6366f1"];
 
-export const DashboardStats: React.FC<DashboardStatsProps> = ({ donors }) => {
+export const DashboardStats: React.FC<DashboardStatsProps> = ({
+  donors,
+  dashboardData,
+}) => {
   const stats = useMemo(() => {
+    // Prefer API-provided dashboardData when available
+    if (dashboardData) {
+      const totalRaised = dashboardData.totalAmount ?? 0;
+      const avgDonation = dashboardData.avgAmount ?? 0;
+
+      const chartData = (dashboardData.topByDate || []).map((r) => {
+        const rawDate = r.EntryDate || r.Entry_Date || "";
+        const name = rawDate
+          ? new Date(rawDate).toLocaleDateString(undefined, {
+              month: "short",
+              day: "numeric",
+            })
+          : "";
+        return { name, amount: r.total };
+      });
+
+      const ageChartData = [
+        { name: "18-30", value: dashboardData.ages?.under30 ?? 0 },
+        { name: "31-50", value: dashboardData.ages?.between30and49 ?? 0 },
+        { name: "51-65", value: dashboardData.ages?.between50and64 ?? 0 },
+        { name: "65+", value: dashboardData.ages?.over65 ?? 0 },
+      ];
+
+      return { totalRaised, avgDonation, chartData, ageChartData };
+    }
+
+    // Fallback to donors client-side data
     const totalRaised = donors.reduce((acc, curr) => acc + curr.amount, 0);
     const avgDonation = donors.length > 0 ? totalRaised / donors.length : 0;
 
@@ -30,7 +61,6 @@ export const DashboardStats: React.FC<DashboardStatsProps> = ({ donors }) => {
     const sortedByDate = [...donors].sort(
       (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime(),
     );
-    // Simple grouping for chart (mocking daily aggregation for simplicity)
     const dailyDataMap = new Map<string, number>();
     sortedByDate.forEach((d) => {
       const dateStr = new Date(d.date).toLocaleDateString(undefined, {
@@ -43,7 +73,6 @@ export const DashboardStats: React.FC<DashboardStatsProps> = ({ donors }) => {
       .map(([name, amount]) => ({ name, amount }))
       .slice(-7);
 
-    // Age Groups
     const ageGroups = {
       "18-30": 0,
       "31-50": 0,
@@ -64,7 +93,7 @@ export const DashboardStats: React.FC<DashboardStatsProps> = ({ donors }) => {
     }));
 
     return { totalRaised, avgDonation, chartData, ageChartData };
-  }, [donors]);
+  }, [donors, dashboardData]);
 
   return (
     <div className="space-y-6">
@@ -91,7 +120,7 @@ export const DashboardStats: React.FC<DashboardStatsProps> = ({ donors }) => {
             <Users className="h-4 w-4 text-sheriff-600" />
           </div>
           <div className="text-2xl font-bold text-slate-900">
-            {donors.length}
+            {dashboardData?.distinctDonors?.length}
           </div>
           <p className="text-xs text-slate-500 mt-1">Across 3 counties</p>
         </div>

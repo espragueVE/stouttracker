@@ -19,6 +19,6 @@ export default async function fetchUsersInfo() {
 
   const result = await sql<UsersRow[]>`
         select * from public."User"        
-        `;
+        Order By "L_Name" ASC;`;
   return result;
 }

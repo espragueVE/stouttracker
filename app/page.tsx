@@ -77,10 +77,8 @@ const App: React.FC = () => {
     // return localStorage.getItem('sheriff_auth') === 'true';
   });
   const [view, setView] = useState<ViewState>("dashboard");
-  const [donors, setDonors] = useState<Donor[]>(() => {
-    const saved = localStorage.getItem("sheriff_donors");
-    return saved ? JSON.parse(saved) : [];
-  });
+
+  const [donors, setDonors] = useState<Donor[]>([]);  
   const [forms, setForms] = useState<CampaignForm[]>(() => {
     if (typeof window === "undefined") return INITIAL_FORMS;
     const saved = localStorage.getItem("sheriff_forms");
@@ -104,10 +102,18 @@ const App: React.FC = () => {
   );
 
   useEffect(() => {
-    localStorage.setItem("sheriff_donors", JSON.stringify(donors));
-    localStorage.setItem("sheriff_forms", JSON.stringify(forms));
-    // localStorage.setItem('sheriff_auth', isLoggedIn.toString());
-  }, [donors, forms, isLoggedIn]);
+    const load = async () => {
+      try {
+        const res = await fetch("/api/GetUsers");
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data: Donor[] = await res.json();
+        setDonors(data);
+      } catch (err) {
+        console.error("Failed to load users:", err);
+      }
+    };
+    load();
+  }, []);
 
   // Fetch dashboard aggregates from server API
   useEffect(() => {

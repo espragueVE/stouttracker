@@ -4,6 +4,12 @@ export interface FormField {
   type: "text" | "textarea" | "email" | "tel" | "number" | "date";
   required: boolean;
 }
+
+export interface Amounts {
+  id: string;
+  amount: number;
+}
+
 export interface LogEntry {
   id: string;
   user?: Donor;
@@ -100,14 +106,14 @@ export interface LogPayload {
 
 // Shape returned by the dashboard API
 export interface DashboardData {
-  totalAmount: number;
-  distinctDonors: Array<string | number>;
-  avgAmount: number;
-  topByDate: Array<{ Entry_Date?: string; EntryDate?: string; total: number }>;
+  totalAmount: Array<{ totalamount: string }>;
+  distinctDonors: Array<{ donors: string }>;
+  avgAmount: Array<{ avgamount: string }>;
+  topByDate: Array<{ date: string; total: string }>;
   ages: {
-    under30: number;
-    between30and49: number;
-    between50and64: number;
-    over65: number;
+    under30: { count: string };
+    between30and50: { count: string };
+    between51and64: { count: string };
+    over65: { count: string };
   };
 }

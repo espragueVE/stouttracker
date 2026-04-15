@@ -326,24 +326,6 @@ export const FormsManager: React.FC<FormsManagerProps> = ({
             </div>
           </div>
         ))}
-
-        {/* Empty State / Custom Builder placeholder */}
-        <div className="bg-slate-50 border-2 border-dashed border-slate-200 rounded-xl p-6 flex flex-col items-center justify-center text-center space-y-3 min-h-[280px]">
-          <div className="p-4 bg-white rounded-full shadow-sm">
-            <FileSignature className="h-8 w-8 text-slate-400" />
-          </div>
-          <div>
-            <p className="text-sm font-bold text-slate-600">
-              Custom Form Builder
-            </p>
-            <p className="text-xs text-slate-500">
-              Create specialized tracking logs
-            </p>
-          </div>
-          <button className="text-xs bg-white border border-slate-300 px-4 py-2 rounded-lg font-bold text-slate-700 shadow-sm hover:bg-slate-100 hover:border-slate-400 transition-colors">
-            Configure Editor
-          </button>
-        </div>
       </div>
 
       {/* Log Entry Modal */}

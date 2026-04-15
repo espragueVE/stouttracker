@@ -14,6 +14,25 @@ export const DonorList: React.FC<DonorListProps> = ({ donors }) => {
   const [activeDropdownId, setActiveDropdownId] = useState<string | null>(null);
   const [viewingDonor, setViewingDonor] = useState<Donor | null>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const [donorsData, setDonors] = useState<Donor[]>(donors);
+
+  useEffect(() => {
+    const fetchDonors = async () => {
+      try {
+        const response = await fetch('/api/GetUsers');
+        if (!response.ok) {
+          throw new Error('Failed to fetch donors');
+        }
+        const data: Donor[] = await response.json();
+        // Assuming the API returns an array of donors, you can set it to state if needed
+        setDonors(data);
+      } catch (error) {
+        console.error('Error fetching donors:', error);
+      }
+    };
+    fetchDonors();
+  }, []);
+
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {

@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
-import { Donor } from "../types";
+import { Amounts, Donor } from "../types";
 import {
   Search,
   Mail,
@@ -42,6 +42,37 @@ export const SupportersList: React.FC<SupportersListProps> = ({
   const [activeDropdownId, setActiveDropdownId] = useState<string | null>(null);
   const [viewingSupporter, setViewingSupporter] = useState<Donor | null>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const [supportersData, setSupporters] = useState<Donor[]>(supporters);
+
+  useEffect(() => {
+    setSupporters(supporters);
+  }, [supporters]);
+
+  useEffect(() => {
+    const loadDonationTotals = async () => {
+      try {
+        const response = await fetch("/api/GetDonationAmountsByUser");
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+
+        const donationAmounts: Amounts[] = await response.json();
+        const amountsById = new Map(
+          donationAmounts.map((item) => [item.id, Number(item.amount) || 0]),
+        );
+
+        setSupporters((prev) =>
+          prev.map((supporter) => ({
+            ...supporter,
+            amount: amountsById.get(supporter.id) ?? supporter.amount ?? 0,
+          })),
+        );
+      } catch (error) {
+        console.error("Failed to load donation totals:", error);
+      }
+    };
+
+    loadDonationTotals();
+  }, []);
+
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -56,7 +87,7 @@ export const SupportersList: React.FC<SupportersListProps> = ({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const filteredSupporters = supporters.filter((s) => {
+  const filteredSupporters = supportersData.filter((s) => {
     const matchesSearch =
       `${s.firstName} ${s.lastName}`
         .toLowerCase()
@@ -91,7 +122,6 @@ export const SupportersList: React.FC<SupportersListProps> = ({
       });
     }
   };
-
   return (
     <div className="bg-white shadow-sm rounded-xl border border-slate-200 overflow-hidden">
       {/* Toolbar */}
@@ -173,8 +203,7 @@ export const SupportersList: React.FC<SupportersListProps> = ({
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center">
                         <div className="flex-shrink-0 h-8 w-8 rounded-full bg-sheriff-100 flex items-center justify-center text-sheriff-700 font-bold text-xs">
-                          {supporter.firstName[0]}
-                          {supporter.lastName[0]}
+                          {(supporter.firstName?.[0] || "?")}{(supporter.lastName?.[0] || "?")}
                         </div>
                         <div className="ml-4">
                           <div className="text-sm font-medium text-slate-900">
@@ -258,8 +287,8 @@ export const SupportersList: React.FC<SupportersListProps> = ({
               </button>
               <div className="flex items-center gap-4">
                 <div className="h-16 w-16 rounded-2xl bg-gold-500 flex items-center justify-center text-sheriff-950 font-black text-2xl shadow-lg">
-                  {viewingSupporter.firstName[0]}
-                  {viewingSupporter.lastName[0]}
+                  {viewingSupporter.firstName?.[0] || "?"}
+                  {viewingSupporter.lastName?.[0] || "?"}
                 </div>
                 <div>
                   <h2 className="text-2xl font-bold">
@@ -285,7 +314,7 @@ export const SupportersList: React.FC<SupportersListProps> = ({
                 </div>
                 <div className="bg-slate-50 p-3 rounded-xl border border-slate-100">
                   <p className="text-xs text-slate-500 uppercase tracking-wider font-bold mb-1">
-                    Donation Date
+                    First Donation Date
                   </p>
                   <p className="text-sm font-bold text-slate-700">
                     {new Date(viewingSupporter.date).toLocaleDateString(
@@ -303,13 +332,13 @@ export const SupportersList: React.FC<SupportersListProps> = ({
                   <div className="flex items-center gap-3 text-slate-600">
                     <AtSign className="h-4 w-4 text-sheriff-500" />
                     <span className="text-sm">
-                      {viewingSupporter.email || "No email provided"}
+                      {viewingSupporter.businessOrg || "No business/organization provided"}
                     </span>
                   </div>
                   <div className="flex items-center gap-3 text-slate-600">
                     <Phone className="h-4 w-4 text-sheriff-500" />
                     <span className="text-sm">
-                      {viewingSupporter.phone || "No phone provided"}
+                      {viewingSupporter.employer || "No employer provided"}
                     </span>
                   </div>
                   <div className="flex items-center gap-3 text-slate-600">

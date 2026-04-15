@@ -21,7 +21,7 @@ interface DashboardStatsProps {
 }
 
 const COLORS = ["#0ea5e9", "#f59e0b", "#10b981", "#6366f1"];
-
+  
 export const DashboardStats: React.FC<DashboardStatsProps> = ({
   donors,
   dashboardData,
@@ -29,33 +29,46 @@ export const DashboardStats: React.FC<DashboardStatsProps> = ({
   const stats = useMemo(() => {
     // Prefer API-provided dashboardData when available
     if (dashboardData) {
-      const totalRaised = dashboardData.totalAmount ?? 0;
-      const avgDonation = dashboardData.avgAmount ?? 0;
+      const totalRaised = dashboardData.totalAmount[0].totalamount ?? 0;
+      
+      // Extract avgAmount from array and parse string to number
+      const avgDonation = dashboardData.avgAmount?.[0]
+        ? parseFloat(dashboardData.avgAmount[0].avgamount)
+        : 0;
+      
+      // Extract distinctDonors count from array and parse string to number
+      const distinctDonorsCount = dashboardData.distinctDonors?.[0]
+        ? parseInt(dashboardData.distinctDonors[0].donors, 10)
+        : 0;
 
+      // Transform topByDate data: parse dates and totals
       const chartData = (dashboardData.topByDate || []).map((r) => {
-        const rawDate = r.EntryDate || r.Entry_Date || "";
+        const rawDate = r.date || "";
         const name = rawDate
           ? new Date(rawDate).toLocaleDateString(undefined, {
               month: "short",
               day: "numeric",
             })
           : "";
-        return { name, amount: r.total };
+        const amount = parseFloat(r.total) || 0;
+        return { name, amount };
       });
 
+      // Extract age counts from nested objects and parse strings to numbers
       const ageChartData = [
-        { name: "18-30", value: dashboardData.ages?.under30 ?? 0 },
-        { name: "31-50", value: dashboardData.ages?.between30and49 ?? 0 },
-        { name: "51-65", value: dashboardData.ages?.between50and64 ?? 0 },
-        { name: "65+", value: dashboardData.ages?.over65 ?? 0 },
+        { name: "18-30", value: parseInt(dashboardData.ages?.under30?.count || "0", 10) },
+        { name: "31-50", value: parseInt(dashboardData.ages?.between30and50?.count || "0", 10) },
+        { name: "51-64", value: parseInt(dashboardData.ages?.between51and64?.count || "0", 10) },
+        { name: "65+", value: parseInt(dashboardData.ages?.over65?.count || "0", 10) },
       ];
 
-      return { totalRaised, avgDonation, chartData, ageChartData };
+      return { totalRaised, avgDonation, chartData, ageChartData, distinctDonorsCount };
     }
 
     // Fallback to donors client-side data
     const totalRaised = donors.reduce((acc, curr) => acc + curr.amount, 0);
     const avgDonation = donors.length > 0 ? totalRaised / donors.length : 0;
+    const distinctDonorsCount = donors.length;
 
     // Group by Date (Last 7 entries)
     const sortedByDate = [...donors].sort(
@@ -92,7 +105,7 @@ export const DashboardStats: React.FC<DashboardStatsProps> = ({
       value,
     }));
 
-    return { totalRaised, avgDonation, chartData, ageChartData };
+    return { totalRaised, avgDonation, chartData, ageChartData, distinctDonorsCount };
   }, [donors, dashboardData]);
 
   return (
@@ -107,9 +120,7 @@ export const DashboardStats: React.FC<DashboardStatsProps> = ({
           <div className="text-2xl font-bold text-slate-900">
             ${stats.totalRaised.toLocaleString()}
           </div>
-          <p className="text-xs text-emerald-600 mt-1 font-medium">
-            +12% from last month
-          </p>
+          <p className="text-xs text-slate-500 mt-1">Since campaign start</p>
         </div>
 
         <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
@@ -120,9 +131,8 @@ export const DashboardStats: React.FC<DashboardStatsProps> = ({
             <Users className="h-4 w-4 text-sheriff-600" />
           </div>
           <div className="text-2xl font-bold text-slate-900">
-            {dashboardData?.distinctDonors?.length}
+            {stats.distinctDonorsCount}
           </div>
-          <p className="text-xs text-slate-500 mt-1">Across 3 counties</p>
         </div>
 
         <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
@@ -135,7 +145,6 @@ export const DashboardStats: React.FC<DashboardStatsProps> = ({
           <div className="text-2xl font-bold text-slate-900">
             ${Math.round(stats.avgDonation)}
           </div>
-          <p className="text-xs text-slate-500 mt-1">Per supporter</p>
         </div>
 
         <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200">

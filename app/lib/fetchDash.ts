@@ -1,60 +1,113 @@
-import type { Pool, RowDataPacket } from "mysql2/promise";
-import sql from "./db";
+import supabase from "@/app/utils/supabase";
 
 export default async function fetchDashInfo() {
- 
-  type TopByDateRow = RowDataPacket & { EntryDate: string; total: number };
+  type MonetaryDonationRow = {
+    amount: number | string | null;
+    date: string | null;
+  };
+
+  type EntryRow = {
+    SupporterID: string | number | null;
+  };
+
+  type UserRow = {
+    Age: number | null;
+  };
 
   try {
-    const totalRows = await sql`
-      SELECT SUM("amount") AS totalAmount FROM public."MonetaryDonation"
-    `;
+    const [
+      monetaryDonationsResult,
+      entriesResult,
+      usersResult,
+    ] = await Promise.all([
+      supabase.from("MonetaryDonation").select("amount, date"),
+      supabase.from("Entry").select("SupporterID"),
+      supabase.from("User").select("Age"),
+    ]);
 
-    const donorCount = await sql`
-      SELECT COUNT(DISTINCT "SupporterID") AS Donors FROM public."Entry"
-    `;
+    if (monetaryDonationsResult.error) {
+      throw monetaryDonationsResult.error;
+    }
 
-    const avgAmount = await sql`
-      SELECT AVG("amount") AS avgAmount FROM public."MonetaryDonation"
-    `;
+    if (entriesResult.error) {
+      throw entriesResult.error;
+    }
 
-    const topByDateRows = await sql<TopByDateRow[]>`
-      SELECT "date", SUM("amount") AS total FROM public."MonetaryDonation" GROUP BY "date" ORDER BY total DESC LIMIT 5
-    `;
+    if (usersResult.error) {
+      throw usersResult.error;
+    }
 
-    const [ageUnder30] = await sql`
-      SELECT COUNT(*) AS count FROM public."User" WHERE "Age" < 30
-    `;
-    const [age30to50] = await sql`
-      SELECT COUNT(*) AS count FROM public."User" WHERE "Age" >= 30 AND "Age" < 51
-    `;
-    const [age51to64] = await sql`
-      SELECT COUNT(*) AS count FROM public."User" WHERE "Age" >= 51 AND "Age" < 65
-    `;
-    const [age65plus] = await sql`
-      SELECT COUNT(*) AS count FROM public."User" WHERE "Age" >= 65
-    `;
+    const monetaryDonations =
+      (monetaryDonationsResult.data as MonetaryDonationRow[] | null) ?? [];
+    const entries = (entriesResult.data as EntryRow[] | null) ?? [];
+    const users = (usersResult.data as UserRow[] | null) ?? [];
+
+    const donationAmounts = monetaryDonations.map((row) => Number(row.amount) || 0);
+    const totalAmount = donationAmounts.reduce((sum, amount) => sum + amount, 0);
+    const avgAmount = donationAmounts.length > 0 ? totalAmount / donationAmounts.length : 0;
+
+    const distinctDonors = new Set(
+      entries
+        .map((row) => row.SupporterID)
+        .filter((supporterId): supporterId is string | number => supporterId !== null),
+    ).size;
+
+    const totalsByDate = monetaryDonations.reduce<Map<string, number>>((accumulator, row) => {
+      if (!row.date) {
+        return accumulator;
+      }
+
+      const currentTotal = accumulator.get(row.date) ?? 0;
+      accumulator.set(row.date, currentTotal + (Number(row.amount) || 0));
+      return accumulator;
+    }, new Map());
+
+    const topByDate = Array.from(totalsByDate.entries())
+      .map(([date, total]) => ({ date, total }))
+      .sort((left, right) => right.total - left.total)
+      .slice(0, 5);
+
+    const ages = users.reduce(
+      (accumulator, row) => {
+        const age = row.Age;
+
+        if (age === null) {
+          return accumulator;
+        }
+
+        if (age < 30) {
+          accumulator.under30 += 1;
+        } else if (age < 51) {
+          accumulator.between30and50 += 1;
+        } else if (age < 65) {
+          accumulator.between51and64 += 1;
+        } else {
+          accumulator.over65 += 1;
+        }
+
+        return accumulator;
+      },
+      {
+        under30: 0,
+        between30and50: 0,
+        between51and64: 0,
+        over65: 0,
+      },
+    );
 
     return {
-      totalAmount: totalRows ?? 0,
-      distinctDonors: donorCount,
-      avgAmount: avgAmount ?? 0,
-      topByDate: topByDateRows,
-      ages: {
-        under30: ageUnder30 ?? 0,
-        between30and50: age30to50 ?? 0,
-        between51and64: age51to64 ?? 0,
-        over65: age65plus ?? 0,
-      },
+      totalAmount,
+      distinctDonors,
+      avgAmount,
+      topByDate,
+      ages,
     };
   } catch (err: any) {
-    // Helpful debug logging (do not log secrets in production)
     console.error("fetchDashInfo DB error:", {
       message: err.message,
       code: err.code,
-      errno: err.errno,
-      host: process.env.DB_SERVER,
-      port: process.env.DB_PORT,
+      details: err.details,
+      hint: err.hint,
     });
     throw err;
   }

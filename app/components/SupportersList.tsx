@@ -62,7 +62,7 @@ export const SupportersList: React.FC<SupportersListProps> = ({
         setSupporters((prev) =>
           prev.map((supporter) => ({
             ...supporter,
-            amount: amountsById.get(supporter.id) ?? supporter.amount ?? 0,
+            amount: amountsById.get(Number(supporter.id)) ?? supporter.amount ?? 0,
           })),
         );
       } catch (error) {
@@ -170,7 +170,7 @@ export const SupportersList: React.FC<SupportersListProps> = ({
                 scope="col"
                 className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider"
               >
-                Total Contribution
+                Total Monetary Contribution
               </th>
               <th
                 scope="col"
@@ -306,7 +306,7 @@ export const SupportersList: React.FC<SupportersListProps> = ({
               <div className="grid grid-cols-2 gap-4">
                 <div className="bg-slate-50 p-3 rounded-xl border border-slate-100">
                   <p className="text-xs text-slate-500 uppercase tracking-wider font-bold mb-1">
-                    Total Contribution
+                    Total Monetary Contribution
                   </p>
                   <p className="text-xl font-black text-emerald-600">
                     ${viewingSupporter.amount.toLocaleString()}

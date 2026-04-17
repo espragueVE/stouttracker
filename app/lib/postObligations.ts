@@ -1,44 +1,88 @@
 import { LogPayload } from "../types";
-import sql from "./db";
+import supabase from "@/app/utils/supabase";
 
 export default async function postObligations(payload: LogPayload) {
-  //check user info if existing or not prob just send as part of the payload
-  //if no user id create new user
-  //then inert log info ---- get id from this and use as foreign key in entrydetails table
-  //insert into logentrydetails with logid
-  //then create Entry
   let userId = payload.user?.id;
 
   if (!userId || userId === "") {
-    const createUserResult = await sql`
-        insert into public."User" ("Business_Org", "F_Name", "M_Name", "L_Name", "Address", "City", "State", "Zip", "Occupation", "Employer")
-        values (${payload.user?.businessOrg || ""}, ${payload.user?.firstName || ""}, ${payload.user?.middleName || ""}, ${payload.user?.lastName || ""}, ${payload.user?.address || ""}, ${payload.user?.city || ""}, ${payload.user?.state || ""}, ${payload.user?.zip || ""}, ${payload.user?.occupation || ""}, ${payload.user?.employer || ""})
-        returning id
-        `;
-    userId = createUserResult[0]?.id.toString();
+    const createUserResult = await supabase
+      .from("User")
+      .insert({
+        Business_Org: payload.user?.businessOrg || "",
+        F_Name: payload.user?.firstName || "",
+        M_Name: payload.user?.middleName || "",
+        L_Name: payload.user?.lastName || "",
+        Address: payload.user?.address || "",
+        City: payload.user?.city || "",
+        State: payload.user?.state || "",
+        Zip: payload.user?.zip || "",
+        Occupation: payload.user?.occupation || "",
+        Employer: payload.user?.employer || "",
+      })
+      .select("id")
+      .single();
+
+    if (createUserResult.error) {
+      throw createUserResult.error;
+    }
+
+    userId = String(createUserResult.data?.id ?? "");
   }
 
-  const createObligationLog = await sql`
-        insert into public."Obligations"
-        ("description", "outstanding_start", "debt_incurred", "payment", "outstanding_end")
-        Values (${payload.answers.Description}, ${payload.answers.OutstandingBalanceStart}, ${payload.answers.DebtIncurred}, ${payload.answers.DebtPayments}, ${payload.answers.OutstandingBalanceEnd} )
-        RETURNING id
-        `;
-  const obligationID = createObligationLog[0]?.id;
+  if (!userId) {
+    throw new Error("Failed to resolve or create user");
+  }
 
-  const createEntryDetails = await sql`
-        insert into public."LogEntryDetails" ("created_at", "ObligationID")
-        values (now(), ${obligationID})
-        returning id
-    `;
-  const obligationEntryDetailsId = createEntryDetails[0]?.id;
+  const currentSupporterId = Number(userId);
 
-  const createEntry = await sql`
-        insert into public."Entry" ("created_at", "ObligationID", "SupporterID")
-        values (now(), ${obligationEntryDetailsId}, ${userId || null})
-        returning id
-    `;
-  const entryId = createEntry[0]?.id;
+  const createObligationLog = await supabase
+    .from("Obligations")
+    .insert({
+      description: payload.answers.Description,
+      outstanding_start: Number(payload.answers.OutstandingBalanceStart) || 0,
+      debt_incurred: Number(payload.answers.DebtIncurred) || 0,
+      payments: Number(payload.answers.DebtPayments) || 0,
+      outstanding_end: Number(payload.answers.OutstandingBalanceEnd) || 0,
+    })
+    .select("id")
+    .single();
+
+  if (createObligationLog.error) {
+    throw createObligationLog.error;
+  }
+
+  const obligationID = createObligationLog.data?.id;
+
+  const createEntryDetails = await supabase
+    .from("LogEntryDetails")
+    .insert({
+      created_at: new Date().toISOString(),
+      ObligationID: obligationID,
+    })
+    .select("Id")
+    .single();
+
+  if (createEntryDetails.error) {
+    throw createEntryDetails.error;
+  }
+
+  const LogEntryDetailsId = createEntryDetails.data?.Id;
+
+  const createEntry = await supabase
+    .from("Entry")
+    .insert({
+      created_at: new Date().toISOString(),
+      LogEntryDetailsID: LogEntryDetailsId,
+      SupporterID: Number.isNaN(currentSupporterId) ? null : currentSupporterId,
+    })
+    .select("EntryId")
+    .single();
+
+  if (createEntry.error) {
+    throw createEntry.error;
+  }
+
+  const entryId = createEntry.data?.EntryId;
 
   return { success: true, entryId };
 }

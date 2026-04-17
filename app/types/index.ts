@@ -6,7 +6,7 @@ export interface FormField {
 }
 
 export interface Amounts {
-  id: string;
+  id: number;
   amount: number;
 }
 
@@ -106,14 +106,14 @@ export interface LogPayload {
 
 // Shape returned by the dashboard API
 export interface DashboardData {
-  totalAmount: Array<{ totalamount: string }>;
-  distinctDonors: Array<{ donors: string }>;
-  avgAmount: Array<{ avgamount: string }>;
-  topByDate: Array<{ date: string; total: string }>;
+  totalAmount: number;
+  distinctDonors: number;
+  avgAmount: number;
+  topByDate: Array<{ date: string; total: number }>;
   ages: {
-    under30: { count: string };
-    between30and50: { count: string };
-    between51and64: { count: string };
-    over65: { count: string };
+    under30: number;
+    between30and50: number;
+    between51and64: number;
+    over65: number;
   };
 }

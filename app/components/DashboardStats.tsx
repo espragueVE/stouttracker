@@ -29,19 +29,10 @@ export const DashboardStats: React.FC<DashboardStatsProps> = ({
   const stats = useMemo(() => {
     // Prefer API-provided dashboardData when available
     if (dashboardData) {
-      const totalRaised = dashboardData.totalAmount[0].totalamount ?? 0;
-      
-      // Extract avgAmount from array and parse string to number
-      const avgDonation = dashboardData.avgAmount?.[0]
-        ? parseFloat(dashboardData.avgAmount[0].avgamount)
-        : 0;
-      
-      // Extract distinctDonors count from array and parse string to number
-      const distinctDonorsCount = dashboardData.distinctDonors?.[0]
-        ? parseInt(dashboardData.distinctDonors[0].donors, 10)
-        : 0;
+      const totalRaised = dashboardData.totalAmount ?? 0;
+      const avgDonation = dashboardData.avgAmount ?? 0;
+      const distinctDonorsCount = dashboardData.distinctDonors ?? 0;
 
-      // Transform topByDate data: parse dates and totals
       const chartData = (dashboardData.topByDate || []).map((r) => {
         const rawDate = r.date || "";
         const name = rawDate
@@ -50,16 +41,15 @@ export const DashboardStats: React.FC<DashboardStatsProps> = ({
               day: "numeric",
             })
           : "";
-        const amount = parseFloat(r.total) || 0;
+        const amount = r.total || 0;
         return { name, amount };
       });
 
-      // Extract age counts from nested objects and parse strings to numbers
       const ageChartData = [
-        { name: "18-30", value: parseInt(dashboardData.ages?.under30?.count || "0", 10) },
-        { name: "31-50", value: parseInt(dashboardData.ages?.between30and50?.count || "0", 10) },
-        { name: "51-64", value: parseInt(dashboardData.ages?.between51and64?.count || "0", 10) },
-        { name: "65+", value: parseInt(dashboardData.ages?.over65?.count || "0", 10) },
+        { name: "18-30", value: dashboardData.ages?.under30 || 0 },
+        { name: "31-50", value: dashboardData.ages?.between30and50 || 0 },
+        { name: "51-64", value: dashboardData.ages?.between51and64 || 0 },
+        { name: "65+", value: dashboardData.ages?.over65 || 0 },
       ];
 
       return { totalRaised, avgDonation, chartData, ageChartData, distinctDonorsCount };

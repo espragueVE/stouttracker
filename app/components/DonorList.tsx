@@ -225,7 +225,7 @@ export const DonorList: React.FC<DonorListProps> = ({ donors }) => {
             <div className="p-6 space-y-6">
               <div className="grid grid-cols-2 gap-4">
                 <div className="bg-slate-50 p-3 rounded-xl border border-slate-100">
-                  <p className="text-xs text-slate-500 uppercase tracking-wider font-bold mb-1">Total Contribution</p>
+                  <p className="text-xs text-slate-500 uppercase tracking-wider font-bold mb-1">Total Monetary Contribution</p>
                   <p className="text-xl font-black text-emerald-600">${viewingDonor.amount.toLocaleString()}</p>
                 </div>
                 <div className="bg-slate-50 p-3 rounded-xl border border-slate-100">

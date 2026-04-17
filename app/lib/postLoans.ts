@@ -1,44 +1,101 @@
 import { LogPayload } from "../types";
-import sql from "./db";
+import supabase from "@/app/utils/supabase";
 
 export default async function postLoans(payload: LogPayload) {
-  //check user info if existing or not prob just send as part of the payload
-  //if no user id create new user
-  //then inert log info ---- get id from this and use as foreign key in entrydetails table
-  //insert into logentrydetails with logid
-  //then create Entry
   let userId = payload.user?.id;
 
   if (!userId || userId === "") {
-    const createUserResult = await sql`
-        insert into public."User" ("Business_Org", "F_Name", "M_Name", "L_Name", "Address", "City", "State", "Zip", "Occupation", "Employer")
-        values (${payload.user?.businessOrg || ""}, ${payload.user?.firstName || ""}, ${payload.user?.middleName || ""}, ${payload.user?.lastName || ""}, ${payload.user?.address || ""}, ${payload.user?.city || ""}, ${payload.user?.state || ""}, ${payload.user?.zip || ""}, ${payload.user?.occupation || ""}, ${payload.user?.employer || ""})
-        returning id
-        `;
-    userId = createUserResult[0]?.id.toString();
+    const createUserResult = await supabase
+      .from("User")
+      .insert({
+        Business_Org: payload.user?.businessOrg || "",
+        F_Name: payload.user?.firstName || "",
+        M_Name: payload.user?.middleName || "",
+        L_Name: payload.user?.lastName || "",
+        Address: payload.user?.address || "",
+        City: payload.user?.city || "",
+        State: payload.user?.state || "",
+        Zip: payload.user?.zip || "",
+        Occupation: payload.user?.occupation || "",
+        Employer: payload.user?.employer || "",
+      })
+      .select("id")
+      .single();
+
+    if (createUserResult.error) {
+      throw createUserResult.error;
+    }
+
+    userId = String(createUserResult.data?.id ?? "");
   }
 
-  const createLoanLog = await sql`
-        insert into public."Loans"
-        ("outstanding_start", "recieved", "payment", "outstanding_end", "received_for", "date", "endorser_id1", "amount_outstanding1", "endorser_id2", "amount_outstanding2", "endorser_id3", "amount_outstanding3" )
-        Values (${payload.answers.OutstandingBalanceStart}, ${payload.answers.LoansReceived}, ${payload.answers.LoanPayments}, ${payload.answers.OutstandingBalanceEnd}, ${payload.answers.ReceivedFor}, ${payload.answers.Date}, ${payload.answers.EndorserId1 || null}, ${payload.answers.AmountOutstanding1 || null}, ${payload.answers.EndorserId2 || null}, ${payload.answers.AmountOutstanding2 || null}, ${payload.answers.EndorserId3 || null}, ${payload.answers.AmountOutstanding3 || null} )
-        RETURNING id
-        `;
-  const loanID = createLoanLog[0]?.id;
+  if (!userId) {
+    throw new Error("Failed to resolve or create user");
+  }
 
-  const createEntryDetails = await sql`
-        insert into public."LogEntryDetails" ("created_at", "LoanID")
-        values (now(), ${loanID})
-        returning id
-    `;
-  const loanEntryDetailsId = createEntryDetails[0]?.id;
+  const currentSupporterId = Number(userId);
 
-  const createEntry = await sql`
-        insert into public."Entry" ("created_at", "LoanID", "SupporterID")
-        values (now(), ${loanEntryDetailsId}, ${userId || null})
-        returning id
-    `;
-  const entryId = createEntry[0]?.id;
+  const createLoanLog = await supabase
+    .from("Loans")
+    .insert({
+      outstanding_start: Number(payload.answers.OutstandingBalanceStart) || 0,
+      recieved: Number(payload.answers.LoansReceived) || 0,
+      payment: Number(payload.answers.LoanPayments) || 0,
+      outstanding_end: Number(payload.answers.OutstandingBalanceEnd) || 0,
+      received_for: payload.answers.ReceivedFor,
+      date: payload.answers.Date,
+      endorser_id1: payload.answers.EndorserId1 || null,
+      amount_outstanding1: payload.answers.AmountOutstanding1
+        ? Number(payload.answers.AmountOutstanding1)
+        : null,
+      endorser_id2: payload.answers.EndorserId2 || null,
+      amount_outstanding2: payload.answers.AmountOutstanding2
+        ? Number(payload.answers.AmountOutstanding2)
+        : null,
+      endorser_id3: payload.answers.EndorserId3 || null,
+      amount_outstanding3: payload.answers.AmountOutstanding3
+        ? Number(payload.answers.AmountOutstanding3)
+        : null,
+    })
+    .select("id")
+    .single();
+
+  if (createLoanLog.error) {
+    throw createLoanLog.error;
+  }
+
+  const loanID = createLoanLog.data?.id;
+
+  const createEntryDetails = await supabase
+    .from("LogEntryDetails")
+    .insert({
+      created_at: new Date().toISOString(),
+      LoanID: loanID,
+    })
+    .select("Id")
+    .single();
+
+  if (createEntryDetails.error) {
+    throw createEntryDetails.error;
+  }
+
+  const LogEntryDetailsId = createEntryDetails.data?.Id;
+
+  const createEntry = await supabase
+    .from("Entry")
+    .insert({
+      created_at: new Date().toISOString(),
+      LogEntryDetailsID: LogEntryDetailsId,
+      SupporterID: Number.isNaN(currentSupporterId) ? null : currentSupporterId,
+    })
+    .select("EntryId")
+    .single();
+
+  if (createEntry.error) {
+    throw createEntry.error;
+  }
+
+  const entryId = createEntry.data?.EntryId;
 
   return { success: true, entryId };
 }

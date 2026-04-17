@@ -1,10 +1,15 @@
 import { NextResponse } from "next/server";
 import { Donor } from "@/app/types/index";
 import fetchUsersInfo from "@/app/lib/fetchUsers";
+import fetchUsersDonationTotals from "@/app/lib/fetchUserDonationTotals";
+import { Amounts } from "@/app/types/index";
+
 
 export async function GET() {
   try {
     const users = await fetchUsersInfo();
+    const userDonations: Amounts[] = await fetchUsersDonationTotals();
+    console.log("amounts by user:", userDonations);
     
     // Transform database results to Donor interface
     const donors: Donor[] = users.map((user: any) => ({
@@ -14,8 +19,9 @@ export async function GET() {
       middleName: user.M_Name || undefined,
       businessOrg: user.Business_Org || undefined,
       email: undefined, // Not in database
-      amount: user.totalDonated || 0, // Default value
-      date: user.created_at?.toISOString() || new Date().toISOString(),
+      amount:
+        userDonations.find((donation) => donation.id === Number(user.id))?.amount || 0,
+      date: user.created_at || new Date().toISOString(),
       phone: undefined, // Not in database
       address: user.Address,
       city: user.City,

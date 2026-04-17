@@ -1,24 +1,27 @@
-import sql from "./db";
+import supabase from "@/app/utils/supabase";
 
 export default async function fetchUsersInfo() {
   type UsersRow = {
     id: string;
-    created_at: Date;
-    Business_Org: string;
+    created_at: string | null;
+    Business_Org: string | null;
     F_Name: string;
-    M_Name: string;
+    M_Name: string | null;
     L_Name: string;
     Address: string;
     City: string;
-    State: string;
+    State: string | null;
     Zip: string;
-    Occupation: string;
-    Employer: string;
-    Age: number;
+    Occupation: string | null;
+    Employer: string | null;
+    Age: number | null;
   };
 
-  const result = await sql<UsersRow[]>`
-        select * from public."User"        
-        Order By "L_Name" ASC;`;
-  return result;
+  const { data, error } = await supabase.from('User').select().order('L_Name', { ascending: true });
+
+  if (error) {
+    throw error;
+  }
+
+  return (data as UsersRow[] | null) ?? [];
 }

@@ -60,6 +60,42 @@ export const LoansForm: FormField[] = [
     required: true,
   },
   {
+    id: "EndorserId1",
+    label: "Endorser",
+    type: "text",
+    required: false,
+  },
+    {
+      id: "AmountOutstanding1",
+      label: "Amount Outstanding for Endorser 1",
+      type: "number",
+      required: false,
+    },
+      {
+    id: "EndorserId2",
+    label: "Endorser 2",
+    type: "text",
+    required: false,
+  },
+    {
+      id: "AmountOutstanding2",
+      label: "Amount Outstanding for Endorser 2",
+      type: "number",
+      required: false,
+    },  {
+    id: "EndorserId3",
+    label: "Endorser 3",
+    type: "text",
+    required: false,
+  },
+    {
+      id: "AmountOutstanding3",
+      label: "Amount Outstanding for Endorser 3",
+      type: "number",
+      required: false,
+    },
+
+  {
     id: "OutstandingBalanceEnd",
     label: "Outstanding Balance End",
     type: "number",
@@ -111,11 +147,11 @@ const DEFAULT_FIELDS: FormField[] = [
 // Preset mapping for forms that may have lost their `FormQuestions` when
 // persisted or loaded from localStorage.
 const PRESET_FORMS: { [formId: string]: FormField[] } = {
-  f1: MonetaryDonationForm,
-  f2: InKindDonationForm,
-  f3: ExpendituresForm,
-  f4: LoansForm,
-  f5: ObligationsForm,
+  MonetaryContributions: MonetaryDonationForm,
+  InKindContributions: InKindDonationForm,
+  Expenditures: ExpendituresForm,
+  Loans: LoansForm,
+  Obligations: ObligationsForm,
 };
 
 export const FormsManager: React.FC<FormsManagerProps> = ({
@@ -191,11 +227,13 @@ export const FormsManager: React.FC<FormsManagerProps> = ({
 
   if (selectedForm) {
     currentFields =
-      selectedForm.FormQuestions ||
-      formFields[selectedForm.id] ||
       PRESET_FORMS[selectedForm.id] ||
+      formFields[selectedForm.id] ||
+      selectedForm.FormQuestions ||
       DEFAULT_FIELDS;
   }
+
+  const getDonorId = (donor: Donor | null) => String(donor?.id ?? "");
 
   const renderFormField = (field: FormField) => {
     const value = formAnswers[field.id] || "";
@@ -359,10 +397,10 @@ export const FormsManager: React.FC<FormsManagerProps> = ({
                 {!isNewUser ? (
                   <div className="space-y-3">
                     <select
-                      value={selectedDonor?.id || ""}
+                      value={getDonorId(selectedDonor)}
                       onChange={(e) => {
                         const donor = donors.find(
-                          (d) => d.id === e.target.value,
+                          (d) => String(d.id) === e.target.value,
                         );
                         setSelectedDonor(donor || null);
                       }}
@@ -372,7 +410,7 @@ export const FormsManager: React.FC<FormsManagerProps> = ({
                         Choose from existing participants...
                       </option>
                       {donors.map((donor) => (
-                        <option key={donor.id} value={donor.id}>
+                        <option key={String(donor.id)} value={String(donor.id)}>
                           {donor.firstName}{" "}
                           {donor.middleName ? donor.middleName + " " : ""}
                           {donor.lastName}

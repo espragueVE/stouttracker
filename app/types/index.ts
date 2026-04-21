@@ -75,7 +75,7 @@ export interface CampaignStats {
   recentDonations: Donor[];
 }
 
-export type ViewState = "dashboard" | "supporters" | "log";
+export type ViewState = "dashboard" | "supporters" | "log" | "entries";
 
 // Volunteer interface for campaign staff management
 export interface Volunteer {
@@ -115,6 +115,7 @@ export interface LogPayload {
     zip?: string;
     occupation?: string;
     employer?: string;
+    age?: number;
   };
   answers: { [key: string]: string };
 }

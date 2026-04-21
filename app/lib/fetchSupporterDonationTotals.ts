@@ -1,7 +1,7 @@
 import { Amounts } from "../types";
 import supabase from "@/app/utils/supabase";
 
-export default async function fetchUsersDonationTotals() {
+export default async function fetchSupporterDonationTotals() {
   type EntryRow = {
     SupporterID: string | number | null;
     DetailsID: string | number | null;

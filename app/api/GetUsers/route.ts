@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { Donor } from "@/app/types/index";
-import fetchUsersInfo from "@/app/lib/fetchUsers";
-import fetchUsersDonationTotals from "@/app/lib/fetchUserDonationTotals";
+import fetchUsersInfo from "@/app/lib/fetchSupporters";
+import fetchUsersDonationTotals from "@/app/lib/fetchSupporterDonationTotals";
 import { Amounts } from "@/app/types/index";
 
 

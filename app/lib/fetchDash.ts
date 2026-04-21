@@ -19,11 +19,11 @@ export default async function fetchDashInfo() {
     const [
       monetaryDonationsResult,
       entriesResult,
-      usersResult,
+      supportersResult,
     ] = await Promise.all([
       supabase.from("MonetaryDonation").select("amount, date"),
       supabase.from("Entry").select("SupporterID, DetailsID").like("DetailsID", "001-%"),
-      supabase.from("User").select("Age"),
+      supabase.from("Supporter").select("Age"),
     ]);
 
     if (monetaryDonationsResult.error) {
@@ -34,19 +34,19 @@ export default async function fetchDashInfo() {
       throw entriesResult.error;
     }
 
-    if (usersResult.error) {
-      throw usersResult.error;
+    if (supportersResult.error) {
+      throw supportersResult.error;
     }
 
     const monetaryDonations =
       (monetaryDonationsResult.data as MonetaryDonationRow[] | null) ?? [];
-    const users = (usersResult.data as UserRow[] | null) ?? [];
+    const supporters = (supportersResult.data as UserRow[] | null) ?? [];
 
     const donationAmounts = monetaryDonations.map((row) => Number(row.amount) || 0);
     const totalAmount = donationAmounts.reduce((sum, amount) => sum + amount, 0);
     const avgAmount = donationAmounts.length > 0 ? totalAmount / donationAmounts.length : 0;
 
-    const distinctDonors =users.length;
+    const distinctDonors =supporters.length;
 
     const totalsByDate = monetaryDonations.reduce<Map<string, number>>((accumulator, row) => {
       if (!row.date) {
@@ -63,7 +63,7 @@ export default async function fetchDashInfo() {
       .sort((left, right) => right.total - left.total)
       .slice(0, 5);
 
-    const ages = users.reduce(
+    const ages = supporters.reduce(
       (accumulator, row) => {
         const age = row.Age;
 

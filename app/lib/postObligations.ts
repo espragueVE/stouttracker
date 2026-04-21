@@ -6,7 +6,7 @@ export default async function postObligations(payload: LogPayload) {
 
   if (!userId || userId === "") {
     const createUserResult = await supabase
-      .from("User")
+      .from("Supporter")
       .insert({
         Business_Org: payload.user?.businessOrg || "",
         F_Name: payload.user?.firstName || "",

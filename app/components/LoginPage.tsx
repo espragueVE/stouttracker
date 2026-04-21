@@ -1,37 +1,56 @@
+"use client";
 
-import React, { useState } from 'react';
-import { Shield, Lock, User, Eye, EyeOff, Loader2 } from 'lucide-react';
+import React, { useState } from "react";
+import { Shield, Lock, User, Eye, EyeOff, Loader2, X } from "lucide-react";
 
 interface LoginPageProps {
   onLogin: () => void;
+  onClose?: () => void;
+  standalone?: boolean;
 }
 
-export const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
+export const LoginPage: React.FC<LoginPageProps> = ({
+  onLogin,
+  onClose,
+  standalone = true,
+}) => {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
+    setError("");
     setIsLoading(true);
 
-    // Mock authentication - any username/password works for demo
-    // but typically you'd check against a backend or specific creds
-    setTimeout(() => {
-      if (username.trim() && password.trim()) {
-        onLogin();
-      } else {
-        setError('Please enter valid credentials to access the command center.');
-        setIsLoading(false);
+    try {
+      const response = await fetch("/api/CheckLogin", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
+      const data = (await response.json()) as { error?: string };
+
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to sign in");
       }
-    }, 1200);
+
+        onLogin();
+    } catch (submitError) {
+      setError(
+        submitError instanceof Error
+          ? submitError.message
+          : "Please enter valid credentials to access the command center.",
+      );
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-sheriff-950 p-4 relative overflow-hidden">
+    <div className={`${standalone ? "min-h-screen bg-sheriff-950" : "w-full"} flex items-center justify-center p-4 relative overflow-hidden`}>
       {/* Background Decor */}
       <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-sheriff-900 rounded-full blur-[120px] opacity-50"></div>
       <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-gold-600/10 rounded-full blur-[120px] opacity-30"></div>
@@ -51,6 +70,18 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
 
         <div className="bg-white rounded-3xl shadow-2xl overflow-hidden border border-slate-200">
           <div className="p-8">
+            {onClose && (
+              <div className="mb-4 flex justify-end">
+                <button
+                  type="button"
+                  onClick={onClose}
+                  className="inline-flex h-8 w-8 items-center justify-center rounded-full text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-700"
+                  aria-label="Close login"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+            )}
             <h2 className="text-xl font-bold text-slate-800 mb-2 text-center">Authorized Access Only</h2>
             <p className="text-sm text-slate-500 text-center mb-8">Please sign in to manage campaign operations.</p>
             
@@ -62,18 +93,18 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
               )}
 
               <div className="space-y-1.5">
-                <label className="text-xs font-bold text-slate-400 uppercase tracking-wider ml-1">Username</label>
+                <label className="text-xs font-bold text-slate-400 uppercase tracking-wider ml-1">Email</label>
                 <div className="relative group">
                   <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
                     <User className="h-4 w-4 text-slate-400 group-focus-within:text-sheriff-600 transition-colors" />
                   </div>
                   <input
-                    type="text"
+                    type="email"
                     required
-                    className="block w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-sheriff-500/20 focus:border-sheriff-500 transition-all placeholder:text-slate-300"
-                    placeholder="Campaign ID or Email"
-                    value={username}
-                    onChange={(e) => setUsername(e.target.value)}
+                    className="block text-black w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all placeholder:text-slate-300"
+                    placeholder="you@example.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
                   />
                 </div>
               </div>
@@ -81,7 +112,6 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
               <div className="space-y-1.5">
                 <div className="flex justify-between items-center ml-1">
                   <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Password</label>
-                  <button type="button" className="text-xs font-bold text-sheriff-600 hover:text-sheriff-700">Forgot?</button>
                 </div>
                 <div className="relative group">
                   <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
@@ -90,7 +120,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
                   <input
                     type={showPassword ? 'text' : 'password'}
                     required
-                    className="block w-full pl-10 pr-12 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-sheriff-500/20 focus:border-sheriff-500 transition-all placeholder:text-slate-300"
+                    className="block text-black w-full pl-10 pr-12 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all placeholder:text-slate-300"
                     placeholder="••••••••"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
@@ -108,7 +138,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
               <button
                 type="submit"
                 disabled={isLoading}
-                className="w-full bg-sheriff-900 hover:bg-sheriff-800 text-white font-bold py-3.5 rounded-xl transition-all shadow-lg shadow-sheriff-900/20 active:scale-[0.98] flex items-center justify-center gap-2"
+                className="w-full bg-blue-900 hover:bg-blue-800 text-white font-bold py-3.5 rounded-xl transition-all shadow-lg shadow-blue-900/20 active:scale-[0.98] flex items-center justify-center gap-2"
               >
                 {isLoading ? (
                   <>
@@ -116,7 +146,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
                     Authenticating...
                   </>
                 ) : (
-                  'Sign In to Command Center'
+                  "Sign In to Command Center"
                 )}
               </button>
             </form>

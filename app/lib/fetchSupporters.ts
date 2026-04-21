@@ -1,7 +1,7 @@
 import supabase from "@/app/utils/supabase";
 
-export default async function fetchUsersInfo() {
-  type UsersRow = {
+export default async function fetchSupportersInfo() {
+  type SupportersRow = {
     id: string;
     created_at: string | null;
     Business_Org: string | null;
@@ -17,11 +17,11 @@ export default async function fetchUsersInfo() {
     Age: number | null;
   };
 
-  const { data, error } = await supabase.from('User').select().order('L_Name', { ascending: true });
+  const { data, error } = await supabase.from('Supporter').select().order('L_Name', { ascending: true });
 
   if (error) {
     throw error;
   }
 
-  return (data as UsersRow[] | null) ?? [];
+  return (data as SupportersRow[] | null) ?? [];
 }

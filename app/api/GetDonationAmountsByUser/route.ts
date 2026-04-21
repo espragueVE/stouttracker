@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import fetchUserDonationTotals from "@/app/lib/fetchUserDonationTotals";
+import fetchUserDonationTotals from "@/app/lib/fetchSupporterDonationTotals";
 
 export async function GET() {
   try {

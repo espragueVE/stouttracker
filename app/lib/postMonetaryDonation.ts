@@ -6,7 +6,7 @@ export default async function postMonetaryDonation(payload: LogPayload) {
 
   if (!userId || userId === "") {
     const createUserResult = await supabase
-      .from("User")
+      .from("Supporter")
       .insert({
         Business_Org: payload.user?.businessOrg || "",
         F_Name: payload.user?.firstName || "",
@@ -18,6 +18,7 @@ export default async function postMonetaryDonation(payload: LogPayload) {
         Zip: payload.user?.zip || "",
         Occupation: payload.user?.occupation || "",
         Employer: payload.user?.employer || "",
+        Age: payload.user?.age || null,
       })
       .select("id")
       .single();

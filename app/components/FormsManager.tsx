@@ -3,7 +3,6 @@
 import React, { useState } from "react";
 import { CampaignForm, Donor, FormField } from "../types";
 import { ClipboardList, FileSignature, ChevronRight, X } from "lucide-react";
-import { time } from "console";
 
 interface FormsManagerProps {
   forms: CampaignForm[];
@@ -21,6 +20,7 @@ export const MonetaryDonationForm: FormField[] = [
   },
   { id: "ReceivedFor", label: "Received For", type: "text", required: true },
   { id: "DateReceived", label: "Date Received", type: "date", required: true },
+  { id: "Anonymous", label: "Prefers Anonymously?", type: "bool", required: false },
 ];
 
 export const InKindDonationForm: FormField[] = [
@@ -163,6 +163,10 @@ export const FormsManager: React.FC<FormsManagerProps> = ({
   const [isLogFormOpen, setIsLogFormOpen] = useState(false);
   const [selectedFormId, setSelectedFormId] = useState<string | null>(null);
   const [selectedDonor, setSelectedDonor] = useState<Donor | null>(null);
+  const [reportStartDate, setReportStartDate] = useState("");
+  const [reportEndDate, setReportEndDate] = useState("");
+  const [isCreatingReport, setIsCreatingReport] = useState(false);
+  const [reportMessage, setReportMessage] = useState<string | null>(null);
   const [isNewUser, setIsNewUser] = useState(false);
   const [newUserData, setNewUserData] = useState({
     businessOrg: "",
@@ -235,6 +239,52 @@ export const FormsManager: React.FC<FormsManagerProps> = ({
 
   const getDonorId = (donor: Donor | null) => String(donor?.id ?? "");
 
+  const handleCreateReport = async () => {
+    if (!reportStartDate || !reportEndDate) {
+      setReportMessage("Select both a start date and an end date.");
+      return;
+    }
+
+    setIsCreatingReport(true);
+    setReportMessage(null);
+
+    try {
+      const response = await fetch("/api/GetReport", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          startDate: reportStartDate,
+          endDate: reportEndDate,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        setReportMessage(data.error || "Failed to create report.");
+        return;
+      }
+
+      const fileContent = JSON.stringify(data, null, 2);
+      const blob = new Blob([fileContent], { type: "application/json" });
+      const downloadUrl = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = downloadUrl;
+      link.download = `report-${reportStartDate}-${reportEndDate}.json`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(downloadUrl);
+
+      setReportMessage("Report created and downloaded.");
+    } catch (error) {
+      console.error("Create report error:", error);
+      setReportMessage("Failed to create report.");
+    } finally {
+      setIsCreatingReport(false);
+    }
+  };
+
   const renderFormField = (field: FormField) => {
     const value = formAnswers[field.id] || "";
 
@@ -302,6 +352,25 @@ export const FormsManager: React.FC<FormsManagerProps> = ({
             className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-slate-900"
           />
         );
+      case "bool":
+        return (
+          <div key={field.id} className="flex items-center gap-4">
+            <label className="flex items-center gap-2 text-slate-900">
+              <input
+                type="checkbox"
+                checked={value === "true"}
+                onChange={(e) =>
+                  setFormAnswers({
+                    ...formAnswers,
+                    [field.id]: e.target.checked ? "true" : "false",
+                  })
+                }
+                className="form-checkbox h-5 w-5 text-blue-600"
+              />
+              {field.label}
+            </label>
+          </div>
+        );
       case "text":
       default:
         return (
@@ -330,6 +399,58 @@ export const FormsManager: React.FC<FormsManagerProps> = ({
             Log activities and fill out required reporting forms
           </p>
         </div>
+      </div>
+
+      <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-5">
+        <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-4">
+          <div>
+            <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2">
+              <FileSignature className="h-5 w-5 text-blue-700" />
+              Create Report
+            </h3>
+            <p className="text-sm text-slate-500 mt-1">
+              Generate a report for a selected date range.
+            </p>
+          </div>
+
+          <div className="flex flex-col sm:flex-row gap-3 lg:items-end">
+            <div>
+              <label className="block text-xs font-bold text-slate-600 uppercase tracking-wide mb-1">
+                Start Date
+              </label>
+              <input
+                type="date"
+                value={reportStartDate}
+                onChange={(e) => setReportStartDate(e.target.value)}
+                className="w-full sm:w-auto px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-slate-900"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-slate-600 uppercase tracking-wide mb-1">
+                End Date
+              </label>
+              <input
+                type="date"
+                value={reportEndDate}
+                onChange={(e) => setReportEndDate(e.target.value)}
+                className="w-full sm:w-auto px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-slate-900"
+              />
+            </div>
+
+            <button
+              onClick={handleCreateReport}
+              disabled={isCreatingReport}
+              className="px-5 py-2.5 bg-slate-900 text-white font-bold rounded-lg hover:bg-slate-800 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+            >
+              {isCreatingReport ? "Creating..." : "Create Report"}
+            </button>
+          </div>
+        </div>
+
+        {reportMessage && (
+          <p className="text-sm text-slate-600 mt-4">{reportMessage}</p>
+        )}
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -507,7 +628,7 @@ export const FormsManager: React.FC<FormsManagerProps> = ({
                       />
                       <input
                         type="text"
-                        placeholder="State"
+                        placeholder="State (e.g. CA)"
                         value={newUserData.state}
                         onChange={(e) =>
                           setNewUserData({

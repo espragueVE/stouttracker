@@ -36,12 +36,11 @@ export default async function postMonetaryDonation(payload: LogPayload) {
   const supporterId = Number(userId);
   const amountDonated = Number(payload.answers.AmountDonated) || 0;
 
-  const [entriesResult, logEntryDetailsResult, donationsResult] = await Promise.all([
+  const [entriesResult, donationsResult] = await Promise.all([
     supabase
       .from("Entry")
-      .select("LogEntryDetailsID")
+      .select("DetailsID")
       .eq("SupporterID", supporterId),
-    supabase.from("LogEntryDetails").select("Id, MonetaryDonationID"),
     supabase.from("MonetaryDonation").select("id, amount"),
   ]);
 
@@ -49,42 +48,50 @@ export default async function postMonetaryDonation(payload: LogPayload) {
     throw entriesResult.error;
   }
 
-  if (logEntryDetailsResult.error) {
-    throw logEntryDetailsResult.error;
-  }
-
   if (donationsResult.error) {
     throw donationsResult.error;
   }
 
   const relatedLogEntryIds = new Set(
-    ((entriesResult.data as Array<{ LogEntryDetailsID: string | number | null }> | null) ?? [])
-      .map((entry) => entry.LogEntryDetailsID)
-      .filter((entryId): entryId is string | number => entryId !== null)
-      .map(String),
-  );
-
-  const monetaryDonationIds = new Set(
-    ((logEntryDetailsResult.data as Array<{ Id: string | number; MonetaryDonationID: string | number | null }> | null) ?? [])
+    ((entriesResult.data as Array<{ DetailsID: string | number | null }> | null) ?? [])
+      .map((entry) => entry.DetailsID)
       .filter(
-        (detail): detail is { Id: string | number; MonetaryDonationID: string | number } =>
-          detail.MonetaryDonationID !== null && relatedLogEntryIds.has(String(detail.Id)),
+        (id): id is string | number =>
+          id !== null && String(id).startsWith("001-"),
       )
-      .map((detail) => String(detail.MonetaryDonationID)),
+      .map(String),
   );
 
   const totalValue =
     ((donationsResult.data as Array<{ id: string | number; amount: number | string | null }> | null) ?? [])
-      .filter((item) => monetaryDonationIds.has(String(item.id)))
+      .filter((item) => relatedLogEntryIds.has(String(item.id)))
       .reduce((sum, item) => sum + (Number(item.amount) || 0), 0);
+
+  const monetaryID = `001-${Date.now()}`;
+
+  const createEntry = await supabase
+    .from("Entry")
+    .insert({
+      created_at: new Date().toISOString(),
+      DetailsID: monetaryID,
+      SupporterID: Number.isNaN(supporterId) ? null : supporterId,
+    })
+    .select("id")
+    .single();
+
+  if (createEntry.error) {
+    throw createEntry.error;
+  }
 
   const createMonetaryLog = await supabase
     .from("MonetaryDonation")
     .insert({
+      id: monetaryID,
       received_for: payload.answers.ReceivedFor,
       amount: amountDonated,
       date: payload.answers.DateReceived,
       aggregate: totalValue + amountDonated,
+      prefers_anonymous: payload.answers.Anonymous === "true",
     })
     .select("id")
     .single();
@@ -93,38 +100,7 @@ export default async function postMonetaryDonation(payload: LogPayload) {
     throw createMonetaryLog.error;
   }
 
-  const monetaryID = createMonetaryLog.data?.id;
-
-  const createEntryDetails = await supabase
-    .from("LogEntryDetails")
-    .insert({
-      created_at: new Date().toISOString(),
-      MonetaryDonationID: monetaryID,
-    })
-    .select("Id")
-    .single();
-
-  if (createEntryDetails.error) {
-    throw createEntryDetails.error;
-  }
-
-  const logEntryDetailsId = createEntryDetails.data?.Id;
-
-  const createEntry = await supabase
-    .from("Entry")
-    .insert({
-      created_at: new Date().toISOString(),
-      LogEntryDetailsID: logEntryDetailsId,
-      SupporterID: Number.isNaN(supporterId) ? null : supporterId,
-    })
-    .select("EntryId")
-    .single();
-
-  if (createEntry.error) {
-    throw createEntry.error;
-  }
-
-  const entryId = createEntry.data?.EntryId;
+  const entryId = createEntry.data?.id;
 
   return { success: true, entryId };
 }

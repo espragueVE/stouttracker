@@ -36,39 +36,57 @@ export default async function postInKindDonation(payload: LogPayload) {
   const currentSupporterId = Number(userId);
   const inKindValue = Number(payload.answers.Value) || 0;
 
-  const [entryResult, logEntryDetailsResult, inKindContributionsResult] = await Promise.all([
+  const [entryResult, inKindContributionsResult] = await Promise.all([
     supabase
       .from("Entry")
-      .select("LogEntryDetailsID")
+      .select("DetailsID")
       .eq("SupporterID", currentSupporterId),
-    supabase.from("LogEntryDetails").select("Id, InKindDonationID"),
     supabase.from("InKindDonation").select("id, Value"),
   ]);
 
-  const relatedLogEntryIds = new Set(
-    ((entryResult.data as Array<{ LogEntryDetailsID: string | number | null }> | null) ?? [])
-      .map((entry) => entry.LogEntryDetailsID)
-      .filter((entryId): entryId is string | number => entryId !== null)
-      .map(String),
-  );
+  if (entryResult.error) {
+    throw entryResult.error;
+  }
 
-  const inKindDonationIds = new Set(
-    ((logEntryDetailsResult.data as Array<{ Id: string | number; InKindDonationID: string | number | null }> | null) ?? [])
+  if (inKindContributionsResult.error) {
+    throw inKindContributionsResult.error;
+  }
+
+  const relatedLogEntryIds = new Set(
+    ((entryResult.data as Array<{ DetailsID: string | number | null }> | null) ?? [])
+      .map((entry) => entry.DetailsID)
       .filter(
-        (detail): detail is { Id: string | number; InKindDonationID: string | number } =>
-          detail.InKindDonationID !== null && relatedLogEntryIds.has(String(detail.Id)),
+        (entryId): entryId is string | number =>
+          entryId !== null && String(entryId).startsWith("002-"),
       )
-      .map((detail) => String(detail.InKindDonationID)),
+      .map(String),
   );
 
   const totalValue =
     ((inKindContributionsResult.data as Array<{ id: string | number; Value: number | string | null }> | null) ?? [])
-      .filter((item) => inKindDonationIds.has(String(item.id)))
+      .filter((item) => relatedLogEntryIds.has(String(item.id)))
       .reduce((sum, item) => sum + (Number(item.Value) || 0), 0);
+
+  const inKindID = `002-${Date.now()}`;
+
+  const createEntry = await supabase
+    .from("Entry")
+    .insert({
+      created_at: new Date().toISOString(),
+      DetailsID: inKindID,
+      SupporterID: Number.isNaN(currentSupporterId) ? null : currentSupporterId,
+    })
+    .select("id")
+    .single();
+
+  if (createEntry.error) {
+    throw createEntry.error;
+  }
 
   const createInKindLog = await supabase
     .from("InKindDonation")
     .insert({
+      id: inKindID,
       received_for: payload.answers.ReceivedFor,
       value: inKindValue,
       description: payload.answers.Description || "",
@@ -82,38 +100,7 @@ export default async function postInKindDonation(payload: LogPayload) {
     throw createInKindLog.error;
   }
 
-  const inKindID = createInKindLog.data?.id;
-
-  const createEntryDetails = await supabase
-    .from("LogEntryDetails")
-    .insert({
-      created_at: new Date().toISOString(),
-      InKindDonationID: inKindID,
-    })
-    .select("Id")
-    .single();
-
-  if (createEntryDetails.error) {
-    throw createEntryDetails.error;
-  }
-
-  const LogEntryDetailsId = createEntryDetails.data?.Id;
-
-  const createEntry = await supabase
-    .from("Entry")
-    .insert({
-      created_at: new Date().toISOString(),
-      LogEntryDetailsID: LogEntryDetailsId,
-      SupporterID: Number.isNaN(currentSupporterId) ? null : currentSupporterId,
-    })
-    .select("EntryId")
-    .single();
-
-  if (createEntry.error) {
-    throw createEntry.error;
-  }
-
-  const entryId = createEntry.data?.EntryId;
+  const entryId = createEntry.data?.id;
 
   return { success: true, entryId };
 }

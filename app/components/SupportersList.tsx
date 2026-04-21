@@ -286,18 +286,14 @@ export const SupportersList: React.FC<SupportersListProps> = ({
                 <X className="h-5 w-5" />
               </button>
               <div className="flex items-center gap-4">
-                <div className="h-16 w-16 rounded-2xl bg-gold-500 flex items-center justify-center text-sheriff-950 font-black text-2xl shadow-lg">
+                <div className="h-16 w-16 text-black rounded-2xl bg-gold-500 flex items-center justify-center text-sheriff-950 font-black text-2xl shadow-lg">
                   {viewingSupporter.firstName?.[0] || "?"}
                   {viewingSupporter.lastName?.[0] || "?"}
                 </div>
                 <div>
-                  <h2 className="text-2xl font-bold">
+                  <h2 className="text-2xl text-black font-bold">
                     {viewingSupporter.firstName} {viewingSupporter.lastName}
                   </h2>
-                  <p className="text-sheriff-400 text-sm font-medium">
-                    Contributor ID:{" "}
-                    {viewingSupporter.id.split("-")[0].toUpperCase()}
-                  </p>
                 </div>
               </div>
             </div>

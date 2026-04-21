@@ -8,6 +8,7 @@ export default async function fetchDashInfo() {
 
   type EntryRow = {
     SupporterID: string | number | null;
+    DetailsID: string | number | null;
   };
 
   type UserRow = {
@@ -21,7 +22,7 @@ export default async function fetchDashInfo() {
       usersResult,
     ] = await Promise.all([
       supabase.from("MonetaryDonation").select("amount, date"),
-      supabase.from("Entry").select("SupporterID"),
+      supabase.from("Entry").select("SupporterID, DetailsID").like("DetailsID", "001-%"),
       supabase.from("User").select("Age"),
     ]);
 
@@ -39,18 +40,13 @@ export default async function fetchDashInfo() {
 
     const monetaryDonations =
       (monetaryDonationsResult.data as MonetaryDonationRow[] | null) ?? [];
-    const entries = (entriesResult.data as EntryRow[] | null) ?? [];
     const users = (usersResult.data as UserRow[] | null) ?? [];
 
     const donationAmounts = monetaryDonations.map((row) => Number(row.amount) || 0);
     const totalAmount = donationAmounts.reduce((sum, amount) => sum + amount, 0);
     const avgAmount = donationAmounts.length > 0 ? totalAmount / donationAmounts.length : 0;
 
-    const distinctDonors = new Set(
-      entries
-        .map((row) => row.SupporterID)
-        .filter((supporterId): supporterId is string | number => supporterId !== null),
-    ).size;
+    const distinctDonors =users.length;
 
     const totalsByDate = monetaryDonations.reduce<Map<string, number>>((accumulator, row) => {
       if (!row.date) {

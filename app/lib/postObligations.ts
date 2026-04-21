@@ -34,10 +34,26 @@ export default async function postObligations(payload: LogPayload) {
   }
 
   const currentSupporterId = Number(userId);
+  const obligationID = `005-${Date.now()}`;
+
+  const createEntry = await supabase
+    .from("Entry")
+    .insert({
+      created_at: new Date().toISOString(),
+      DetailsID: obligationID,
+      SupporterID: Number.isNaN(currentSupporterId) ? null : currentSupporterId,
+    })
+    .select("id")
+    .single();
+
+  if (createEntry.error) {
+    throw createEntry.error;
+  }
 
   const createObligationLog = await supabase
     .from("Obligations")
     .insert({
+      id: obligationID,
       description: payload.answers.Description,
       outstanding_start: Number(payload.answers.OutstandingBalanceStart) || 0,
       debt_incurred: Number(payload.answers.DebtIncurred) || 0,
@@ -51,38 +67,7 @@ export default async function postObligations(payload: LogPayload) {
     throw createObligationLog.error;
   }
 
-  const obligationID = createObligationLog.data?.id;
-
-  const createEntryDetails = await supabase
-    .from("LogEntryDetails")
-    .insert({
-      created_at: new Date().toISOString(),
-      ObligationID: obligationID,
-    })
-    .select("Id")
-    .single();
-
-  if (createEntryDetails.error) {
-    throw createEntryDetails.error;
-  }
-
-  const LogEntryDetailsId = createEntryDetails.data?.Id;
-
-  const createEntry = await supabase
-    .from("Entry")
-    .insert({
-      created_at: new Date().toISOString(),
-      LogEntryDetailsID: LogEntryDetailsId,
-      SupporterID: Number.isNaN(currentSupporterId) ? null : currentSupporterId,
-    })
-    .select("EntryId")
-    .single();
-
-  if (createEntry.error) {
-    throw createEntry.error;
-  }
-
-  const entryId = createEntry.data?.EntryId;
+  const entryId = createEntry.data?.id;
 
   return { success: true, entryId };
 }

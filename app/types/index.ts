@@ -1,7 +1,7 @@
 export interface FormField {
   id: string;
   label: string;
-  type: "text" | "textarea" | "email" | "tel" | "number" | "date";
+  type: "text" | "textarea" | "email" | "tel" | "number" | "date" | "bool";
   required: boolean;
 }
 
@@ -21,6 +21,21 @@ export interface LogEntry {
   category: "donation" | "volunteer" | "event" | "note" | "issue";
   createdBy: string;
 }
+export type  User = {
+    id?: string;
+    created_at?: string;
+    Business_Org?: string;
+    F_Name?: string;
+    L_Name?: string;
+    M_Name?: string;
+    Address?: string;
+    City?: string;
+    State?: string;
+    Zip?: string;
+    Occupation?: string;
+    Employer?: string;
+    Age?: number;
+    };
 
 export interface Donor {
   id: string;

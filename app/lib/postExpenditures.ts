@@ -35,10 +35,26 @@ export default async function postExpenditures(payload: LogPayload) {
 
   const expenditureAmount = Number(payload.answers.Amount) || 0;
   const currentSupporterId = Number(userId);
+  const expenditureID = `004-${Date.now()}`;
+
+  const createEntry = await supabase
+    .from("Entry")
+    .insert({
+      created_at: new Date().toISOString(),
+      DetailsID: expenditureID,
+      SupporterID: Number.isNaN(currentSupporterId) ? null : currentSupporterId,
+    })
+    .select("id")
+    .single();
+
+  if (createEntry.error) {
+    throw createEntry.error;
+  }
 
   const createExpenditureLog = await supabase
     .from("Expenditures")
     .insert({
+      id: expenditureID,
       amount: expenditureAmount,
       purpose: payload.answers.Purpose,
       date: payload.answers.Date,
@@ -50,38 +66,7 @@ export default async function postExpenditures(payload: LogPayload) {
     throw createExpenditureLog.error;
   }
 
-  const expenditureID = createExpenditureLog.data?.id;
-
-  const createEntryDetails = await supabase
-    .from("LogEntryDetails")
-    .insert({
-      created_at: new Date().toISOString(),
-      ExpenditureID: expenditureID,
-    })
-    .select("Id")
-    .single();
-
-  if (createEntryDetails.error) {
-    throw createEntryDetails.error;
-  }
-
-  const LogEntryDetailsId = createEntryDetails.data?.Id;
-
-  const createEntry = await supabase
-    .from("Entry")
-    .insert({
-      created_at: new Date().toISOString(),
-      LogEntryDetailsID: LogEntryDetailsId,
-      SupporterID: Number.isNaN(currentSupporterId) ? null : currentSupporterId,
-    })
-    .select("EntryId")
-    .single();
-
-  if (createEntry.error) {
-    throw createEntry.error;
-  }
-
-  const entryId = createEntry.data?.EntryId;
+  const entryId = createEntry.data?.id;
 
   return { success: true, entryId };
 }

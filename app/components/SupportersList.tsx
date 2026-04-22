@@ -2,21 +2,17 @@ import React, { useState, useRef, useEffect } from "react";
 import { Amounts, Donor } from "../types";
 import {
   Search,
-  Mail,
-  Loader2,
-  Filter,
+
   MoreVertical,
   Eye,
   X,
   MapPin,
   Briefcase,
-  Calendar,
-  Phone,
+
   AtSign,
   User,
   Edit2,
-  CheckSquare,
-  Square,
+  
 } from "lucide-react";
 
 interface SupportersListProps {
@@ -209,9 +205,6 @@ export const SupportersList: React.FC<SupportersListProps> = ({
                           <div className="text-sm font-medium text-slate-900">
                             {supporter.firstName} {supporter.lastName}
                           </div>
-                          <div className="text-xs text-slate-500">
-                            {supporter.email}
-                          </div>
                         </div>
                       </div>
                     </td>
@@ -332,7 +325,6 @@ export const SupportersList: React.FC<SupportersListProps> = ({
                     </span>
                   </div>
                   <div className="flex items-center gap-3 text-slate-600">
-                    <Phone className="h-4 w-4 text-sheriff-500" />
                     <span className="text-sm">
                       {viewingSupporter.employer || "No employer provided"}
                     </span>

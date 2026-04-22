@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { Volunteer } from '../types';
-import { UserPlus, Search, Phone, Mail, MoreVertical } from 'lucide-react';
+import { UserPlus, Search,  Mail, MoreVertical } from 'lucide-react';
 
 interface VolunteerListProps {
   volunteers: Volunteer[];

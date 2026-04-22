@@ -80,13 +80,7 @@ const INITIAL_FORMS: CampaignForm[] = [
 ];
 
 const App: React.FC = () => {
-  const [isLoggedIn, setIsLoggedIn] = useState<boolean>(() => {
-    if (typeof window === "undefined") {
-      return false;
-    }
-
-    return localStorage.getItem("sheriff_auth") === "true";
-  });
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isLoginOpen, setIsLoginOpen] = useState(false);
   const [isCreateUserOpen, setIsCreateUserOpen] = useState(false);
   const [createUserEmail, setCreateUserEmail] = useState("");
@@ -119,6 +113,10 @@ const App: React.FC = () => {
   const [dashboardData, setDashboardData] = useState<DashboardData | null>(
     null,
   );
+
+  useEffect(() => {
+    setIsLoggedIn(localStorage.getItem("sheriff_auth") === "true");
+  }, []);
 
   const loadUsers = async () => {
     try {
@@ -244,22 +242,36 @@ const App: React.FC = () => {
     }
   };
 
-  const handleSaveDonor = (donorData: Donor) => {
+  const handleSaveDonor = async (donorData: Donor) => {
     if (editingDonor) {
-      setDonors((prev) =>
-        prev.map((d) => (d.id === donorData.id ? donorData : d)),
-      );
+      await handleUpdateSupporter(donorData);
     } else {
       setDonors((prev) => [donorData, ...prev]);
     }
+
     setIsFormOpen(false);
     setEditingDonor(undefined);
   };
 
-  const handleUpdateSupporter = (updatedDonor: Donor) => {
-    setDonors((prev) =>
-      prev.map((d) => (d.id === updatedDonor.id ? updatedDonor : d)),
-    );
+  const handleUpdateSupporter = async (updatedDonor: Donor) => {
+    try {
+      const response = await fetch("/api/UpdateSupporter", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(updatedDonor),
+      });
+      const data = (await response.json()) as { error?: string };
+
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to update supporter");
+      }
+
+      setDonors((prev) =>
+        prev.map((d) => (d.id === updatedDonor.id ? updatedDonor : d)),
+      );
+    } catch (error) {
+      console.error("Failed to update supporter:", error);
+    }
   };
 
   const handleEditSupporter = (donor: Donor) => {

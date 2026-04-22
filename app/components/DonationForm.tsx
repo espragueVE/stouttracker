@@ -96,16 +96,6 @@ export const DonationForm: React.FC<DonationFormProps> = ({ donor, onSave, onCan
              </div>
              <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">Email</label>
-                  <input type="email" name="email" className="block w-full rounded-md border-slate-300 shadow-sm focus:border-sheriff-500 focus:ring-sheriff-500 sm:text-sm py-2 border px-3" onChange={handleChange} value={formData.email || ''} />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">Phone</label>
-                  <input type="tel" name="phone" className="block w-full rounded-md border-slate-300 shadow-sm focus:border-sheriff-500 focus:ring-sheriff-500 sm:text-sm py-2 border px-3" onChange={handleChange} value={formData.phone || ''} />
-                </div>
-             </div>
-             <div className="grid grid-cols-2 gap-4">
-                <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">Age</label>
                   <input type="number" name="age" className="block w-full rounded-md border-slate-300 shadow-sm focus:border-sheriff-500 focus:ring-sheriff-500 sm:text-sm py-2 border px-3" onChange={handleChange} value={formData.age || ''} />
                 </div>

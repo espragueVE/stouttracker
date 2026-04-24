@@ -59,6 +59,7 @@ export default async function postObligations(payload: LogPayload) {
       debt_incurred: Number(payload.answers.DebtIncurred) || 0,
       payments: Number(payload.answers.DebtPayments) || 0,
       outstanding_end: Number(payload.answers.OutstandingBalanceEnd) || 0,
+      election_cycle: payload.answers.ElectionCycle,
     })
     .select("id")
     .single();

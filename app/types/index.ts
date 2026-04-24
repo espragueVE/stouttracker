@@ -1,7 +1,7 @@
 export interface FormField {
   id: string;
   label: string;
-  type: "text" | "textarea" | "email" | "tel" | "number" | "date" | "bool";
+  type: "text" | "textarea" | "email" | "tel" | "number" | "date" | "bool" | "zip" | "state" | "dropdown";
   required: boolean;
 }
 

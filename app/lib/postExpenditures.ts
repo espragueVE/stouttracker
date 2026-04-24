@@ -58,6 +58,7 @@ export default async function postExpenditures(payload: LogPayload) {
       amount: expenditureAmount,
       purpose: payload.answers.Purpose,
       date: payload.answers.Date,
+      election_cycle: payload.answers.ElectionCycle,
     })
     .select("id")
     .single();

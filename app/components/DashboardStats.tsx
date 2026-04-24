@@ -1,5 +1,6 @@
 import React, { useMemo } from "react";
 import { Donor, DashboardData } from "../types";
+import { formatDate, parseDateSafely } from "../lib/dateUtils";
 import {
   BarChart,
   Bar,
@@ -36,7 +37,7 @@ export const DashboardStats: React.FC<DashboardStatsProps> = ({
       const chartData = (dashboardData.topByDate || []).map((r) => {
         const rawDate = r.date || "";
         const name = rawDate
-          ? new Date(rawDate).toLocaleDateString(undefined, {
+          ? formatDate(rawDate, undefined, {
               month: "short",
               day: "numeric",
             })
@@ -62,11 +63,13 @@ export const DashboardStats: React.FC<DashboardStatsProps> = ({
 
     // Group by Date (Last 7 entries)
     const sortedByDate = [...donors].sort(
-      (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime(),
+      (a, b) =>
+        (parseDateSafely(a.date)?.getTime() ?? 0) -
+        (parseDateSafely(b.date)?.getTime() ?? 0),
     );
     const dailyDataMap = new Map<string, number>();
     sortedByDate.forEach((d) => {
-      const dateStr = new Date(d.date).toLocaleDateString(undefined, {
+      const dateStr = formatDate(d.date, undefined, {
         month: "short",
         day: "numeric",
       });

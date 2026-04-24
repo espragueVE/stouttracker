@@ -3,6 +3,8 @@
 import React, { useState } from "react";
 import { CampaignForm, Donor, FormField } from "../types";
 import { ClipboardList, FileSignature, ChevronRight, X } from "lucide-react";
+import { ReportPDF } from "./ReportComponents/ReportPDF";
+import Swal from "sweetalert2";
 
 interface FormsManagerProps {
   forms: CampaignForm[];
@@ -11,7 +13,154 @@ interface FormsManagerProps {
   formFields?: { [formId: string]: FormField[] };
 }
 
+type ReportData = {
+  startDate?: string;
+  endDate?: string;
+  monetaryDonations?: Array<{
+    id?: string | number;
+    amount?: number;
+    date?: string | null;
+    aggregate?: number | string | null;
+    received_for?: string | null;
+    prefers_anonymous?: boolean | null;
+    entry?: {
+      user?: {
+        Business_Org?: string | null;
+        F_Name?: string | null;
+        M_Name?: string | null;
+        L_Name?: string | null;
+        Address?: string | null;
+        City?: string | null;
+        State?: string | null;
+        Zip?: string | null;
+        Occupation?: string | null;
+        Employer?: string | null;
+      } | null;
+    } | null;
+  }>;
+  inKindDonations?: Array<{
+    id?: string | number;
+    value?: number | string | null;
+    date?: string | null;
+    aggregate?: number | string | null;
+    received_for?: string | null;
+    description?: string | null;
+    entry?: {
+      user?: {
+        Business_Org?: string | null;
+        F_Name?: string | null;
+        M_Name?: string | null;
+        L_Name?: string | null;
+        Address?: string | null;
+        City?: string | null;
+        State?: string | null;
+        Zip?: string | null;
+        Occupation?: string | null;
+        Employer?: string | null;
+      } | null;
+    } | null;
+  }>;
+  expenditures?: Array<{
+    id?: string | number;
+    amount?: number | string | null;
+    date?: string | null;
+    purpose?: string | null;
+    entry?: {
+      user?: {
+        Business_Org?: string | null;
+        F_Name?: string | null;
+        M_Name?: string | null;
+        L_Name?: string | null;
+        Address?: string | null;
+        City?: string | null;
+        State?: string | null;
+        Zip?: string | null;
+        Occupation?: string | null;
+        Employer?: string | null;
+      } | null;
+    } | null;
+  }>;
+  loans?: Array<{
+    id?: string | number;
+    date?: string | null;
+    outstanding_start?: number | string | null;
+    recieved?: number | string | null;
+    received?: number | string | null;
+    payment?: number | string | null;
+    payments?: number | string | null;
+    outstanding_end?: number | string | null;
+    received_for?: string | null;
+    recieved_for?: string | null;
+    endorser_Fname1?: string | null;
+    endorser_Mname1?: string | null;
+    endorser_Lname1?: string | null;
+    endorser_Address1?: string | null;
+    endorser_City1?: string | null;
+    endorser_State1?: string | null;
+    endorser_Zip1?: string | null;
+    amount_outstanding1?: number | string | null;
+    endorser_Fname2?: string | null;
+    endorser_Mname2?: string | null;
+    endorser_Lname2?: string | null;
+    endorser_Address2?: string | null;
+    endorser_City2?: string | null;
+    endorser_State2?: string | null;
+    endorser_Zip2?: string | null;
+    amount_outstanding2?: number | string | null;
+    endorser_Fname3?: string | null;
+    endorser_Mname3?: string | null;
+    endorser_Lname3?: string | null;
+    endorser_Address3?: string | null;
+    endorser_City3?: string | null;
+    endorser_State3?: string | null;
+    endorser_Zip3?: string | null;
+    amount_outstanding3?: number | string | null;
+    entry?: {
+      user?: {
+        Business_Org?: string | null;
+        F_Name?: string | null;
+        M_Name?: string | null;
+        L_Name?: string | null;
+        Address?: string | null;
+        City?: string | null;
+        State?: string | null;
+        Zip?: string | null;
+        Occupation?: string | null;
+        Employer?: string | null;
+      } | null;
+    } | null;
+  }>;
+  obligations?: Array<{
+    id?: string | number;
+    description?: string | null;
+    outstanding_start?: number | string | null;
+    debt_incurred?: number | string | null;
+    payments?: number | string | null;
+    outstanding_end?: number | string | null;
+    entry?: {
+      user?: {
+        Business_Org?: string | null;
+        F_Name?: string | null;
+        M_Name?: string | null;
+        L_Name?: string | null;
+        Address?: string | null;
+        City?: string | null;
+        State?: string | null;
+        Zip?: string | null;
+        Occupation?: string | null;
+        Employer?: string | null;
+      } | null;
+    } | null;
+  }>;
+};
+
 export const MonetaryDonationForm: FormField[] = [
+    {
+    id: "ElectionCycle",
+    label: "Election Cycle",
+    type: "dropdown",
+    required: true,
+  },
   {
     id: "AmountDonated",
     label: "Amount Donated",
@@ -24,12 +173,24 @@ export const MonetaryDonationForm: FormField[] = [
 ];
 
 export const InKindDonationForm: FormField[] = [
+    {
+    id: "ElectionCycle",
+    label: "Election Cycle",
+    type: "dropdown",
+    required: true,
+  },
   { id: "ReceivedFor", label: "Received For", type: "text", required: true },
   { id: "Value", label: "Estimated Value", type: "number", required: true },
   { id: "DateReceived", label: "Date Received", type: "date", required: true },
 ];
 
 export const ExpendituresForm: FormField[] = [
+    {
+    id: "ElectionCycle",
+    label: "Election Cycle",
+    type: "dropdown",
+    required: true,
+  },
   { id: "Amount", label: "Amount Spent", type: "number", required: true },
   {
     id: "Purpose",
@@ -41,6 +202,12 @@ export const ExpendituresForm: FormField[] = [
 ];
 
 export const LoansForm: FormField[] = [
+    {
+    id: "ElectionCycle",
+    label: "Election Cycle",
+    type: "dropdown",
+    required: true,
+  },
   {
     id: "OutstandingBalanceStart",
     label: "Outstanding Balance Start",
@@ -49,20 +216,56 @@ export const LoansForm: FormField[] = [
   },
   {
     id: "LoansReceived",
-    label: "Loans Received",
+    label: "Loans Received Amount $",
     type: "number",
     required: true,
   },
   {
     id: "LoanPayments",
-    label: "Loan Payments Made",
+    label: "Loan Payments Made $",
     type: "number",
     required: true,
   },
   {
-    id: "EndorserId1",
-    label: "Endorser",
+    id: "EndorserFName1",
+    label: "Endorser 1 First Name",
     type: "text",
+    required: false,
+  },
+  {
+    id: "EndorserMName1",
+    label: "Endorser 1 Middle Name",
+    type: "text",
+    required: false,
+  },
+  {
+    id: "EndorserLName1",
+    label: "Endorser 1 Last Name",
+    type: "text",
+    required: false,
+  },
+  {
+    id: "EndorserAddress1",
+    label: "Endorser 1 Address",
+    type: "text",
+    required: false,
+  },
+  {
+    id: "EndorserCity1",
+    label: "Endorser 1 City",
+    type: "text",
+    required: false,
+  },
+  {
+    id: "EndorserState1",
+    label: "Endorser 1 State",
+    type: "state",
+    required: false,
+  },
+  {
+    id: "EndorserZip1",
+    label: "Endorser 1 Zip",
+    type: "zip",
     required: false,
   },
     {
@@ -72,28 +275,100 @@ export const LoansForm: FormField[] = [
       required: false,
     },
       {
-    id: "EndorserId2",
-    label: "Endorser 2",
+    id: "EndorserFName2",
+    label: "Endorser 2 First Name",
     type: "text",
     required: false,
   },
-    {
-      id: "AmountOutstanding2",
-      label: "Amount Outstanding for Endorser 2",
-      type: "number",
-      required: false,
-    },  {
-    id: "EndorserId3",
-    label: "Endorser 3",
+  {
+    id: "EndorserMName2",
+    label: "Endorser 2 Middle Name",
     type: "text",
     required: false,
   },
-    {
-      id: "AmountOutstanding3",
-      label: "Amount Outstanding for Endorser 3",
-      type: "number",
-      required: false,
-    },
+  {
+    id: "EndorserLName2",
+    label: "Endorser 2 Last Name",
+    type: "text",
+    required: false,
+  },
+  {
+    id: "EndorserAddress2",
+    label: "Endorser 2 Address",
+    type: "text",
+    required: false,
+  },
+  {
+    id: "EndorserCity2",
+    label: "Endorser 2 City",
+    type: "text",
+    required: false,
+  },
+  {
+    id: "EndorserState2",
+    label: "Endorser 2 State",
+    type: "state",
+    required: false,
+  },
+  {
+    id: "EndorserZip2",
+    label: "Endorser 2 Zip",
+    type: "zip",
+    required: false,
+  },
+    { id: "AmountOutstanding2",
+       label: "Amount Outstanding for Endorser 2",
+        type: "number",
+         required: false
+         },
+  {
+    id: "EndorserFName3",
+    label: "Endorser 3 First Name",
+    type: "text",
+    required: false,
+  },
+  {
+    id: "EndorserMName3",
+    label: "Endorser 3 Middle Name",
+    type: "text",
+    required: false,
+  },
+  {
+    id: "EndorserLName3",
+    label: "Endorser 3 Last Name",
+    type: "text",
+    required: false,
+  },
+  {
+    id: "EndorserAddress3",
+    label: "Endorser 3 Address",
+    type: "text",
+    required: false,
+  },
+  {
+    id: "EndorserCity3",
+    label: "Endorser 3 City",
+    type: "text",
+    required: false,
+  },
+  {
+    id: "EndorserState3",
+    label: "Endorser 3 State",
+    type: "state",
+    required: false,
+  },
+  {
+    id: "EndorserZip3",
+    label: "Endorser 3 Zip",
+    type: "zip",
+    required: false,
+  },
+  {
+    id: "AmountOutstanding3",
+    label: "Amount Outstanding for Endorser 3",
+    type: "number",
+    required: false,
+  },
 
   {
     id: "OutstandingBalanceEnd",
@@ -106,6 +381,12 @@ export const LoansForm: FormField[] = [
 ];
 
 export const ObligationsForm: FormField[] = [
+  {
+    id: "ElectionCycle",
+    label: "Election Cycle",
+    type: "dropdown",
+    required: true,
+  },
   {
     id: "Description",
     label: "Description of Obligation",
@@ -167,7 +448,10 @@ export const FormsManager: React.FC<FormsManagerProps> = ({
   const [reportEndDate, setReportEndDate] = useState("");
   const [isCreatingReport, setIsCreatingReport] = useState(false);
   const [reportMessage, setReportMessage] = useState<string | null>(null);
+  const [isReportPreviewOpen, setIsReportPreviewOpen] = useState(false);
+  const [reportData, setReportData] = useState<ReportData | null>(null);
   const [isNewUser, setIsNewUser] = useState(false);
+  const [showNewEndorserFields, setShowNewEndorserFields] = useState(false);
   const [newUserData, setNewUserData] = useState({
     businessOrg: "",
     firstName: "",
@@ -197,6 +481,16 @@ export const FormsManager: React.FC<FormsManagerProps> = ({
       alert("Please fill in all required fields");
       return;
     }
+    const checkZipFormat = Object.entries(formAnswers).find(([key, value]) => key.toLowerCase().includes("zip") && value.length > 0 && !/^\d{5}$/.test(value));
+    if (checkZipFormat) {
+      Swal.fire({
+        icon: "error",
+        title: "Invalid ZIP Code",
+        text: "Please enter a valid 5-digit ZIP code.",
+      });
+      return;
+    }
+
 
     const entry = {
       id: Date.now().toString(),
@@ -236,8 +530,22 @@ export const FormsManager: React.FC<FormsManagerProps> = ({
       selectedForm.FormQuestions ||
       DEFAULT_FIELDS;
   }
+  const [currentLoanMessage, setCurrentLoanMessage] = useState("Show Additional Endorser Fields +");
 
   const getDonorId = (donor: Donor | null) => String(donor?.id ?? "");
+
+  const handleShowMoreClick = () => {
+    if (showNewEndorserFields) {
+      setShowNewEndorserFields(false);
+      setCurrentLoanMessage("Show Additional Endorser Fields +");
+      return currentLoanMessage;
+    }
+    if (!showNewEndorserFields) {
+    setShowNewEndorserFields(true);
+     setCurrentLoanMessage("Hide Additional Endorser Fields -");
+    return currentLoanMessage;
+  }
+};
 
   const handleCreateReport = async () => {
     if (!reportStartDate || !reportEndDate) {
@@ -265,18 +573,9 @@ export const FormsManager: React.FC<FormsManagerProps> = ({
         return;
       }
 
-      const fileContent = JSON.stringify(data, null, 2);
-      const blob = new Blob([fileContent], { type: "application/json" });
-      const downloadUrl = URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = downloadUrl;
-      link.download = `report-${reportStartDate}-${reportEndDate}.json`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      URL.revokeObjectURL(downloadUrl);
-
-      setReportMessage("Report created and downloaded.");
+      setReportData(data as ReportData);
+      setIsReportPreviewOpen(true);
+      setReportMessage("Report created. Use Print to save as PDF.");
     } catch (error) {
       console.error("Create report error:", error);
       setReportMessage("Failed to create report.");
@@ -284,6 +583,15 @@ export const FormsManager: React.FC<FormsManagerProps> = ({
       setIsCreatingReport(false);
     }
   };
+
+  const checkIfShown = (label: string) => {
+    if(!showNewEndorserFields && label.includes("Endorser") && !label.includes("1")){
+      return false;
+    }   
+     return label;
+  };
+   
+  
 
   const renderFormField = (field: FormField) => {
     const value = formAnswers[field.id] || "";
@@ -313,6 +621,36 @@ export const FormsManager: React.FC<FormsManagerProps> = ({
             placeholder="Enter email address..."
             className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-slate-900"
           />
+        );
+        case "zip":
+        return (
+          <input
+            key={field.id}
+            type="number"
+            value={value}
+            maxLength={5}
+            onChange={(e) =>
+              setFormAnswers({ ...formAnswers, [field.id]: e.target.value })
+            }
+            placeholder="Enter ZIP code..."
+            className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-slate-900"
+          />
+        );
+        case "dropdown":
+        return (
+          <select
+            key={field.id}
+            value={value}
+            onChange={(e) =>
+              setFormAnswers({ ...formAnswers, [field.id]: e.target.value })
+            }
+            className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-slate-900"
+          >
+            <option value="">Select election cycle...</option>
+            <option value="primary">Primary Election</option>
+            <option value="general">General Election</option>
+            <option value="runoff">Runoff (Local Elections Only)</option>
+          </select>
         );
       case "tel":
         return (
@@ -349,6 +687,19 @@ export const FormsManager: React.FC<FormsManagerProps> = ({
             onChange={(e) =>
               setFormAnswers({ ...formAnswers, [field.id]: e.target.value })
             }
+            className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-slate-900"
+          />
+        );
+        case "state":
+        return (
+          <input
+            key={field.id}
+            type="text"
+            value={value}
+            onChange={(e) =>
+              setFormAnswers({ ...formAnswers, [field.id]: e.target.value })
+            }
+            placeholder="Enter state abbreviation (e.g. CA)..."
             className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-slate-900"
           />
         );
@@ -501,7 +852,9 @@ export const FormsManager: React.FC<FormsManagerProps> = ({
                 </p>
               </div>
               <button
-                onClick={() => setIsLogFormOpen(false)}
+                onClick={() => {
+                  setIsLogFormOpen(false);
+                }}
                 className="text-slate-500 hover:text-slate-700 hover:bg-slate-100 p-2 rounded-lg transition-colors"
               >
                 <X className="h-6 w-6" />
@@ -639,7 +992,7 @@ export const FormsManager: React.FC<FormsManagerProps> = ({
                         className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-slate-900"
                       />
                       <input
-                        type="text"
+                        type="number"
                         placeholder="Zip"
                         value={newUserData.zip}
                         onChange={(e) =>
@@ -705,12 +1058,22 @@ export const FormsManager: React.FC<FormsManagerProps> = ({
                   {currentFields.map((field) => (
                     <div key={field.id}>
                       <label className="block text-sm font-bold text-slate-800 mb-2">
-                        {field.label}
+                        {checkIfShown(field.label) && field.label}
                         {field.required && (
                           <span className="text-red-500 ml-1">*</span>
                         )}
                       </label>
-                      {renderFormField(field)}
+
+                       {checkIfShown(field.label) && renderFormField(field)}
+                       {field.label === "Amount Outstanding for Endorser 1" && (
+                        <button
+                          onClick={() => handleShowMoreClick()}
+                          className="mt-2 text-sm text-blue-600 hover:text-blue-700 font-bold transition-colors"
+                        >
+                          {currentLoanMessage}
+                        </button>
+                        
+                       )}
                     </div>
                   ))}
                 </div>
@@ -719,7 +1082,7 @@ export const FormsManager: React.FC<FormsManagerProps> = ({
               {/* Action Buttons */}
               <div className="flex gap-3 pt-4 border-t border-slate-200">
                 <button
-                  onClick={() => setIsLogFormOpen(false)}
+                  onClick={() => { setShowNewEndorserFields(false); setIsLogFormOpen(false); }}
                   className="flex-1 px-4 py-2.5 border border-slate-300 text-slate-700 font-bold rounded-lg hover:bg-slate-50 transition-colors"
                 >
                   Cancel
@@ -735,6 +1098,12 @@ export const FormsManager: React.FC<FormsManagerProps> = ({
           </div>
         </div>
       )}
+
+      <ReportPDF
+        isOpen={isReportPreviewOpen}
+        onClose={() => setIsReportPreviewOpen(false)}
+        reportData={reportData}
+      />
     </div>
   );
 };

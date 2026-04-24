@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import Swal from "sweetalert2";
+import { formatDateTime } from "@/app/lib/dateUtils";
 import {
 	Search,
 	FileText,
@@ -61,17 +62,7 @@ const SOURCE_LABELS: Record<string, string> = {
 };
 
 function formatDate(value: string | null | undefined) {
-	if (!value) {
-		return "N/A";
-	}
-
-	const parsed = new Date(value);
-
-	if (Number.isNaN(parsed.getTime())) {
-		return value;
-	}
-
-	return parsed.toLocaleString();
+	return formatDateTime(value);
 }
 
 function formatAmount(record: LogRecord) {

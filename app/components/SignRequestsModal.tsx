@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { SignRequest } from '../types';
+import { formatDate } from '../lib/dateUtils';
 import { X, MapPin, CheckCircle2, Clock } from 'lucide-react';
 
 interface SignRequestsModalProps {
@@ -45,7 +46,7 @@ export const SignRequestsModal: React.FC<SignRequestsModalProps> = ({ requests, 
                   <tr key={req.id} className="hover:bg-slate-50">
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm font-medium text-slate-900">{req.name}</div>
-                      <div className="text-xs text-slate-500">{new Date(req.requestDate).toLocaleDateString()}</div>
+                      <div className="text-xs text-slate-500">{formatDate(req.requestDate)}</div>
                     </td>
                     <td className="px-6 py-4">
                       <div className="text-sm text-slate-600">{req.address}</div>

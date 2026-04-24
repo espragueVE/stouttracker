@@ -1,6 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Donor } from '../types';
+import { getTodayLocalDateInputValue, toDateInputValue } from '../lib/dateUtils';
 import { X } from 'lucide-react';
 
 interface DonationFormProps {
@@ -11,7 +12,7 @@ interface DonationFormProps {
 
 export const DonationForm: React.FC<DonationFormProps> = ({ donor, onSave, onCancel }) => {
   const [formData, setFormData] = useState<Partial<Donor>>({
-    date: new Date().toISOString().split('T')[0],
+    date: getTodayLocalDateInputValue(),
     amount: 0,
     isVolunteer: false,
     requestedSign: false,
@@ -22,7 +23,7 @@ export const DonationForm: React.FC<DonationFormProps> = ({ donor, onSave, onCan
     if (donor) {
       setFormData({
         ...donor,
-        date: donor.date.split('T')[0]
+        date: toDateInputValue(donor.date)
       });
     }
   }, [donor]);
@@ -49,7 +50,7 @@ export const DonationForm: React.FC<DonationFormProps> = ({ donor, onSave, onCan
       firstName: formData.firstName || '',
       lastName: formData.lastName || '',
       amount: formData.amount || 0,
-      date: formData.date || new Date().toISOString(),
+      date: formData.date || getTodayLocalDateInputValue(),
       email: formData.email || '',
       phone: formData.phone || '',
       address: formData.address || '',
@@ -120,7 +121,7 @@ export const DonationForm: React.FC<DonationFormProps> = ({ donor, onSave, onCan
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">Zip Code</label>
-                  <input type="text" name="zip" className="block w-full rounded-md border-slate-300 shadow-sm focus:border-sheriff-500 focus:ring-sheriff-500 sm:text-sm py-2 border px-3" onChange={handleChange} value={formData.zip || ''} />
+                  <input type="zip" name="zip" className="block w-full rounded-md border-slate-300 shadow-sm focus:border-sheriff-500 focus:ring-sheriff-500 sm:text-sm py-2 border px-3" onChange={handleChange} value={formData.zip || ''} />
                 </div>
              </div>
           </div>

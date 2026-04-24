@@ -1,6 +1,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { Donor } from '../types';
+import { formatDate } from '../lib/dateUtils';
 import { Search, Mail, Loader2, Filter, MoreVertical, Eye, X, MapPin, Briefcase, Calendar, Phone, AtSign, User } from 'lucide-react';
 
 interface DonorListProps {
@@ -126,7 +127,7 @@ export const DonorList: React.FC<DonorListProps> = ({ donors }) => {
                       <div className="text-xs text-slate-500">{donor.zip}</div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500">
-                      {new Date(donor.date).toLocaleDateString()}
+                      {formatDate(donor.date)}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium relative">
                       <button 
@@ -230,7 +231,7 @@ export const DonorList: React.FC<DonorListProps> = ({ donors }) => {
                 </div>
                 <div className="bg-slate-50 p-3 rounded-xl border border-slate-100">
                   <p className="text-xs text-slate-500 uppercase tracking-wider font-bold mb-1">Donation Date</p>
-                  <p className="text-sm font-bold text-slate-700">{new Date(viewingDonor.date).toLocaleDateString('en-US', { dateStyle: 'long' })}</p>
+                  <p className="text-sm font-bold text-slate-700">{formatDate(viewingDonor.date, 'en-US', { dateStyle: 'long' })}</p>
                 </div>
               </div>
 

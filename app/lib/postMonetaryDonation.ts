@@ -93,6 +93,7 @@ export default async function postMonetaryDonation(payload: LogPayload) {
       date: payload.answers.DateReceived,
       aggregate: totalValue + amountDonated,
       prefers_anonymous: payload.answers.Anonymous === "true",
+      election_cycle: payload.answers.ElectionCycle,
     })
     .select("id")
     .single();

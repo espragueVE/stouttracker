@@ -1,6 +1,7 @@
 
 import React, { useState } from 'react';
 import { Volunteer } from '../types';
+import { formatDate } from '../lib/dateUtils';
 import { UserPlus, Search,  Mail, MoreVertical } from 'lucide-react';
 
 interface VolunteerListProps {
@@ -92,7 +93,7 @@ export const VolunteerList: React.FC<VolunteerListProps> = ({ volunteers, onAdd 
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500">
-                    {new Date(v.joinedDate).toLocaleDateString()}
+                    {formatDate(v.joinedDate)}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                     <button className="text-slate-400 hover:text-slate-600">

@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import { Amounts, Donor } from "../types";
+import { formatDate } from "../lib/dateUtils";
 import {
   Search,
 
@@ -306,10 +307,9 @@ export const SupportersList: React.FC<SupportersListProps> = ({
                     First Donation Date
                   </p>
                   <p className="text-sm font-bold text-slate-700">
-                    {new Date(viewingSupporter.date).toLocaleDateString(
-                      "en-US",
-                      { dateStyle: "long" },
-                    )}
+                    {formatDate(viewingSupporter.date, "en-US", {
+                      dateStyle: "long",
+                    })}
                   </p>
                 </div>
               </div>

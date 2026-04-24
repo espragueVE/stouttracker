@@ -41,7 +41,7 @@ export default async function postInKindDonation(payload: LogPayload) {
       .from("Entry")
       .select("DetailsID")
       .eq("SupporterID", currentSupporterId),
-    supabase.from("InKindDonation").select("id, Value"),
+    supabase.from("InKindDonation").select("id, value"),
   ]);
 
   if (entryResult.error) {
@@ -63,9 +63,9 @@ export default async function postInKindDonation(payload: LogPayload) {
   );
 
   const totalValue =
-    ((inKindContributionsResult.data as Array<{ id: string | number; Value: number | string | null }> | null) ?? [])
+    ((inKindContributionsResult.data as Array<{ id: string | number; value: number | string | null }> | null) ?? [])
       .filter((item) => relatedLogEntryIds.has(String(item.id)))
-      .reduce((sum, item) => sum + (Number(item.Value) || 0), 0);
+      .reduce((sum, item) => sum + (Number(item.value) || 0), 0);
 
   const inKindID = `002-${Date.now()}`;
 
@@ -92,6 +92,7 @@ export default async function postInKindDonation(payload: LogPayload) {
       description: payload.answers.Description || "",
       date: payload.answers.DateReceived,
       aggregate: totalValue + inKindValue,
+      election_cycle: payload.answers.ElectionCycle,
     })
     .select("id")
     .single();
